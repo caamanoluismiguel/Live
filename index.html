@@ -4,449 +4,1149 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>ObjectStory</title>
-    <meta name="theme-color" content="#1a1612">
+    <meta name="theme-color" content="#0d0b09">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-deep: #0d0b09;
+            --bg-card: #1a1714;
+            --bg-elevated: #252220;
+            --text-primary: #f5f1ea;
+            --text-secondary: #a69c8c;
+            --text-muted: #6b6156;
+            --accent-gold: #d4a94b;
+            --accent-copper: #c17f59;
+            --accent-sage: #7d9470;
+            --accent-burgundy: #8b3a3a;
+            --font-display: 'Playfair Display', Georgia, serif;
+            --font-body: 'Source Sans 3', system-ui, sans-serif;
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+            --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body { height: 100%; overflow: hidden; }
-        body { font-family: system-ui, sans-serif; background: #1a1612; color: #f7f3eb; }
+        body { 
+            font-family: var(--font-body); 
+            background: var(--bg-deep); 
+            color: var(--text-primary);
+            font-weight: 300;
+        }
 
-        .camera { position: fixed; inset: 0; background: #000; }
-        #video { width: 100%; height: 100%; object-fit: cover; }
+        /* ===== CAMERA LAYER ===== */
+        .camera-layer {
+            position: fixed;
+            inset: 0;
+            background: #000;
+        }
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, transparent 30%, rgba(13,11,9,0.6) 100%);
+            pointer-events: none;
+        }
 
+        /* ===== VIEWFINDER ===== */
+        .viewfinder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 72%;
+            max-width: 320px;
+            aspect-ratio: 1;
+            pointer-events: none;
+        }
+        .vf-corner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-color: var(--accent-gold);
+            border-style: solid;
+            opacity: 0.7;
+            transition: all 0.4s var(--ease-out);
+        }
+        .vf-corner.tl { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 12px 0 0 0; }
+        .vf-corner.tr { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 12px 0 0; }
+        .vf-corner.bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 12px; }
+        .vf-corner.br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 12px 0; }
+        
+        .vf-border {
+            position: absolute;
+            inset: 8px;
+            border: 1px solid rgba(212, 169, 75, 0.15);
+            border-radius: 8px;
+            transition: all 0.4s var(--ease-out);
+        }
+
+        .viewfinder.scanning .vf-corner {
+            opacity: 1;
+            width: 50px;
+            height: 50px;
+        }
+        .viewfinder.scanning .vf-border {
+            border-color: rgba(212, 169, 75, 0.4);
+            box-shadow: 0 0 60px rgba(212, 169, 75, 0.15), inset 0 0 30px rgba(212, 169, 75, 0.05);
+        }
+
+        .scan-beam {
+            position: absolute;
+            left: 15%;
+            right: 15%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+            box-shadow: 0 0 20px var(--accent-gold), 0 0 40px var(--accent-gold);
+            opacity: 0;
+            top: 15%;
+        }
+        .viewfinder.scanning .scan-beam {
+            opacity: 1;
+            animation: beamScan 2s ease-in-out infinite;
+        }
+        @keyframes beamScan {
+            0%, 100% { top: 15%; opacity: 0.8; }
+            50% { top: 80%; opacity: 1; }
+        }
+
+        /* ===== HEADER ===== */
         .header {
-            position: fixed; top: 0; left: 0; right: 0; padding: 16px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
-            z-index: 10; font-size: 1.4rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 24px;
+            background: linear-gradient(to bottom, rgba(13,11,9,0.95) 0%, rgba(13,11,9,0.6) 70%, transparent 100%);
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
-        .header span { color: #c9a227; }
-
-        /* Debug box - always visible */
-        #log {
-            position: fixed; top: 60px; left: 10px; right: 10px;
-            background: rgba(0,0,0,0.85); color: #0f0; font-family: monospace;
-            font-size: 11px; padding: 10px; border-radius: 8px;
-            max-height: 120px; overflow-y: auto; z-index: 100;
-            border: 1px solid #0f0;
+        .logo {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+        }
+        .logo span {
+            color: var(--accent-gold);
+            font-style: italic;
+        }
+        .live-badge {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+        }
+        .live-badge.show { display: flex; }
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: livePulse 2s ease-in-out infinite;
+        }
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
         }
 
+        /* ===== BOTTOM CONTROLS ===== */
         .controls {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            padding: 20px; padding-bottom: 40px;
-            background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 10;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 30px 24px;
+            padding-bottom: max(30px, env(safe-area-inset-bottom));
+            background: linear-gradient(to top, rgba(13,11,9,0.98) 0%, rgba(13,11,9,0.8) 60%, transparent 100%);
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .capture-btn {
+            width: 78px;
+            height: 78px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #f5f1ea, #e0d9cc);
+            border: none;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 
+                0 4px 20px rgba(0,0,0,0.4),
+                0 0 0 4px var(--accent-gold),
+                0 0 0 6px rgba(212, 169, 75, 0.3);
+            transition: all 0.2s var(--ease-out);
+        }
+        .capture-btn:active {
+            transform: scale(0.92);
+            box-shadow: 
+                0 2px 10px rgba(0,0,0,0.4),
+                0 0 0 4px var(--accent-gold),
+                0 0 0 6px rgba(212, 169, 75, 0.5);
+        }
+        .capture-btn.busy {
+            animation: capturePulse 1.5s ease-in-out infinite;
+        }
+        @keyframes capturePulse {
+            0%, 100% { box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 0 4px var(--accent-gold), 0 0 0 6px rgba(212, 169, 75, 0.3); }
+            50% { box-shadow: 0 4px 30px rgba(212, 169, 75, 0.4), 0 0 0 4px var(--accent-gold), 0 0 20px rgba(212, 169, 75, 0.6); }
+        }
+        .capture-btn::before {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            border-radius: 50%;
+            border: 2px solid var(--text-muted);
+        }
+        .capture-btn::after {
+            content: '';
+            position: absolute;
+            inset: 14px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, rgba(212, 169, 75, 0.4), transparent);
+        }
+        .capture-hint {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 16px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            white-space: nowrap;
         }
 
-        /* Big obvious button */
-        #captureBtn {
-            width: 80px; height: 80px; border-radius: 50%;
-            background: #f7f3eb; border: 5px solid #c9a227;
-            cursor: pointer; font-size: 24px;
-            display: flex; align-items: center; justify-content: center;
-            -webkit-tap-highlight-color: rgba(201,162,39,0.5);
-            touch-action: manipulation;
+        .side-btn {
+            position: absolute;
+            bottom: max(36px, calc(env(safe-area-inset-bottom) + 6px));
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-md);
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
         }
-        #captureBtn:active { transform: scale(0.9); background: #c9a227; }
+        .side-btn:active {
+            transform: scale(0.92);
+            background: rgba(255,255,255,0.1);
+        }
+        .side-btn svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--text-secondary);
+            fill: none;
+            stroke-width: 1.5;
+        }
+        .gallery-btn { left: 24px; }
+        .settings-btn { right: 24px; }
+        
+        .gallery-count {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            min-width: 18px;
+            height: 18px;
+            background: var(--accent-gold);
+            color: var(--bg-deep);
+            font-size: 0.65rem;
+            font-weight: 600;
+            border-radius: 9px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+        }
+        .gallery-count.show { display: flex; }
 
-        #settingsBtn {
-            position: absolute; right: 20px; bottom: 45px;
-            width: 50px; height: 50px; border-radius: 10px;
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
-            color: #fff; font-size: 20px; cursor: pointer;
+        /* ===== LOADING OVERLAY ===== */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(13, 11, 9, 0.92);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
         }
-
-        /* Loading */
-        #loading {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
-            display: none; align-items: center; justify-content: center;
-            flex-direction: column; z-index: 200;
-        }
-        #loading.show { display: flex; }
-        .spinner {
-            width: 50px; height: 50px; border: 4px solid #333;
-            border-top-color: #c9a227; border-radius: 50%;
-            animation: spin 0.8s linear infinite; margin-bottom: 20px;
+        .loading-overlay.show { display: flex; }
+        
+        .loader {
+            width: 56px;
+            height: 56px;
+            border: 2px solid rgba(212, 169, 75, 0.15);
+            border-top-color: var(--accent-gold);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .loading-text {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-style: italic;
+            color: var(--text-secondary);
+        }
 
-        /* Result panel */
-        #result {
-            position: fixed; inset: 0; background: #1a1612;
-            z-index: 150; transform: translateY(100%);
-            transition: transform 0.4s ease; overflow-y: auto;
-            padding: 20px; padding-top: 60px;
+        /* ===== PANELS (shared) ===== */
+        .panel {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: var(--bg-deep);
+            transition: transform 0.5s var(--ease-out);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
-        #result.show { transform: translateY(0); }
-        #closeResult {
-            position: fixed; top: 15px; right: 15px; z-index: 160;
-            width: 44px; height: 44px; border-radius: 50%;
-            background: #333; border: none; color: #fff;
-            font-size: 24px; cursor: pointer;
-        }
-        #resultContent { line-height: 1.6; }
-        #resultContent h1 { color: #c9a227; margin-bottom: 10px; }
-        #resultContent img { width: 100%; border-radius: 10px; margin-bottom: 15px; }
+        .panel.from-bottom { transform: translateY(100%); }
+        .panel.from-right { transform: translateX(100%); }
+        .panel.from-left { transform: translateX(-100%); }
+        .panel.open { transform: translate(0); }
 
-        /* Settings panel */
-        #settings {
-            position: fixed; inset: 0; background: #1a1612;
-            z-index: 150; transform: translateX(100%);
-            transition: transform 0.4s ease; padding: 20px;
+        .panel-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
         }
-        #settings.show { transform: translateX(0); }
-        #settings h2 { margin-bottom: 20px; }
-        #settings input {
-            width: 100%; padding: 15px; margin-bottom: 15px;
-            background: #333; border: 1px solid #555; border-radius: 8px;
-            color: #fff; font-size: 16px;
+        .panel-title {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 400;
         }
-        #settings button {
-            width: 100%; padding: 15px; background: #c9a227;
-            border: none; border-radius: 8px; color: #000;
-            font-size: 16px; font-weight: bold; cursor: pointer;
+        .close-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .close-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.1); }
+        .close-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--text-secondary);
+            fill: none;
+            stroke-width: 2;
+        }
+        .panel-body {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* ===== STORY PANEL ===== */
+        .story-hero {
+            position: relative;
+            height: 38vh;
+            min-height: 260px;
+        }
+        .story-hero img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .story-hero-fade {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent 30%, var(--bg-deep) 100%);
+        }
+        .story-hero .close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(13,11,9,0.6);
+            backdrop-filter: blur(10px);
+        }
+
+        .story-content {
+            padding: 0 24px 60px;
+            margin-top: -40px;
+            position: relative;
+        }
+        .story-era {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--accent-gold);
+            background: rgba(212, 169, 75, 0.1);
+            padding: 6px 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+        .story-title {
+            font-family: var(--font-display);
+            font-size: 2.2rem;
+            font-weight: 400;
+            line-height: 1.15;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+        }
+        .story-section {
+            margin-bottom: 32px;
+        }
+        .story-section-title {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--accent-gold);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .story-section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, rgba(212, 169, 75, 0.3), transparent);
+        }
+        .story-text {
+            font-size: 1rem;
+            line-height: 1.75;
+            color: var(--text-secondary);
+        }
+        .story-text strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .tag {
+            font-size: 0.8rem;
+            font-weight: 400;
+            padding: 8px 14px;
+            background: rgba(125, 148, 112, 0.12);
+            border: 1px solid rgba(125, 148, 112, 0.25);
+            border-radius: 20px;
+            color: var(--accent-sage);
+        }
+
+        .fun-fact-box {
+            background: linear-gradient(135deg, rgba(193, 127, 89, 0.1), rgba(193, 127, 89, 0.05));
+            border-left: 3px solid var(--accent-copper);
+            padding: 18px 20px;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        }
+        .fun-fact-box .story-text {
+            color: var(--text-primary);
+        }
+
+        /* ===== GALLERY PANEL ===== */
+        .gallery-grid {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        .gallery-item {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .gallery-item:active {
+            transform: scale(0.96);
+        }
+        .gallery-item-img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+        }
+        .gallery-item-info {
+            padding: 12px 14px;
+        }
+        .gallery-item-title {
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            line-height: 1.3;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .gallery-item-era {
+            font-size: 0.7rem;
+            color: var(--accent-gold);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .gallery-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 30px;
+            color: var(--text-muted);
+        }
+        .gallery-empty-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* ===== SETTINGS PANEL ===== */
+        .settings-body {
+            padding: 24px;
+        }
+        .setting-group {
+            margin-bottom: 32px;
+        }
+        .setting-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
             margin-bottom: 10px;
         }
+        .setting-input {
+            width: 100%;
+            padding: 16px;
+            background: var(--bg-elevated);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .setting-input:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+        }
+        .setting-input::placeholder {
+            color: var(--text-muted);
+        }
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-burgundy);
+        }
+        .status-indicator.ok { background: var(--accent-sage); }
+        
+        .save-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent-gold);
+            color: var(--bg-deep);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .save-btn:active { opacity: 0.8; }
 
-        /* Permission screen */
-        #permission {
-            position: fixed; inset: 0; background: #1a1612;
-            z-index: 300; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            text-align: center; padding: 40px;
+        /* ===== PERMISSION SCREEN ===== */
+        .permission-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            background: var(--bg-deep);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
         }
-        #permission.hide { display: none; }
-        #permission h2 { font-size: 1.5rem; margin-bottom: 15px; }
-        #permission p { color: #8b7355; margin-bottom: 30px; }
-        #permission button {
-            padding: 16px 40px; background: #c9a227; border: none;
-            border-radius: 8px; color: #000; font-size: 16px;
-            font-weight: bold; cursor: pointer;
+        .permission-screen.hide { display: none; }
+        .permission-screen svg {
+            width: 72px;
+            height: 72px;
+            stroke: var(--accent-gold);
+            fill: none;
+            stroke-width: 1.5;
+            margin-bottom: 28px;
         }
+        .permission-screen h2 {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 400;
+            margin-bottom: 12px;
+        }
+        .permission-screen p {
+            color: var(--text-secondary);
+            margin-bottom: 36px;
+            max-width: 280px;
+            line-height: 1.6;
+        }
+        .permission-screen button {
+            padding: 16px 48px;
+            background: var(--accent-gold);
+            color: var(--bg-deep);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%) translateY(30px);
+            background: var(--text-primary);
+            color: var(--bg-deep);
+            padding: 14px 24px;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s var(--ease-out);
+            z-index: 400;
+            max-width: 85%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        .toast.error {
+            background: var(--accent-burgundy);
+            color: var(--text-primary);
+        }
+
+        /* ===== HIDDEN DEBUG ===== */
+        #debug {
+            position: fixed;
+            top: 80px;
+            left: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.9);
+            color: #0f0;
+            font-family: monospace;
+            font-size: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 500;
+            display: none;
+            border: 1px solid #0f0;
+        }
+        #debug.show { display: block; }
 
         #canvas { display: none; }
+
+        @supports (padding-top: env(safe-area-inset-top)) {
+            .header { padding-top: calc(20px + env(safe-area-inset-top)); }
+        }
     </style>
 </head>
 <body>
 
-<div class="camera">
+<!-- Camera Layer -->
+<div class="camera-layer">
     <video id="video" autoplay playsinline muted></video>
+    <div class="vignette"></div>
+    <div class="viewfinder" id="viewfinder">
+        <div class="vf-corner tl"></div>
+        <div class="vf-corner tr"></div>
+        <div class="vf-corner bl"></div>
+        <div class="vf-corner br"></div>
+        <div class="vf-border"></div>
+        <div class="scan-beam"></div>
+    </div>
 </div>
 
-<div class="header">Object<span>Story</span></div>
+<!-- Header -->
+<header class="header">
+    <div class="logo">Object<span>Story</span></div>
+    <div class="live-badge" id="liveBadge">
+        <div class="live-dot"></div>
+        <span>Live</span>
+    </div>
+</header>
 
-<div id="log">Debug log ready...</div>
-
+<!-- Controls -->
 <div class="controls">
-    <button id="captureBtn" onclick="handleCapture()">📷</button>
-    <button id="settingsBtn" onclick="openSettings()">⚙️</button>
+    <button class="side-btn gallery-btn" id="galleryBtn" onclick="openGallery()">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span class="gallery-count" id="galleryCount">0</span>
+    </button>
+    <button class="capture-btn" id="captureBtn" onclick="handleCapture()">
+        <span class="capture-hint">Tap to discover</span>
+    </button>
+    <button class="side-btn settings-btn" onclick="openSettings()">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
 </div>
 
 <canvas id="canvas"></canvas>
+<div id="debug"></div>
 
-<div id="permission">
-    <h2>📷 Enable Camera</h2>
-    <p>Point at any object to discover its story</p>
+<!-- Permission Screen -->
+<div class="permission-screen" id="permissionScreen">
+    <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    <h2>Enable Camera</h2>
+    <p>Point your camera at any object or building to discover its hidden story</p>
     <button onclick="enableCamera()">Enable Camera</button>
 </div>
 
-<div id="loading">
-    <div class="spinner"></div>
-    <div id="loadingText">Analyzing...</div>
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loader"></div>
+    <div class="loading-text" id="loadingText">Analyzing...</div>
 </div>
 
-<div id="result">
-    <button id="closeResult" onclick="closeResult()">✕</button>
-    <div id="resultContent"></div>
+<!-- Story Panel -->
+<div class="panel from-bottom" id="storyPanel">
+    <div class="panel-body" id="storyBody"></div>
 </div>
 
-<div id="settings">
-    <h2>⚙️ Settings</h2>
-    <p style="color:#8b7355;margin-bottom:15px;">Enter your OpenAI API key:</p>
-    <input type="text" id="apiKey" placeholder="sk-..." autocomplete="off">
-    <button onclick="saveApiKey()">Save API Key</button>
-    <button onclick="closeSettings()" style="background:#333;color:#fff;">Close</button>
-    <p id="keyStatus" style="margin-top:15px;color:#8b7355;"></p>
+<!-- Gallery Panel -->
+<div class="panel from-left" id="galleryPanel">
+    <div class="panel-header">
+        <div class="panel-title">Your Discoveries</div>
+        <button class="close-btn" onclick="closeGallery()">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+    </div>
+    <div class="panel-body">
+        <div class="gallery-grid" id="galleryGrid"></div>
+    </div>
 </div>
+
+<!-- Settings Panel -->
+<div class="panel from-right" id="settingsPanel">
+    <div class="panel-header">
+        <div class="panel-title">Settings</div>
+        <button class="close-btn" onclick="closeSettings()">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+    </div>
+    <div class="panel-body settings-body">
+        <div class="setting-group">
+            <div class="setting-label">OpenAI API Key</div>
+            <input type="text" class="setting-input" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
+            <div class="api-status">
+                <div class="status-indicator" id="statusIndicator"></div>
+                <span id="statusText">Not configured</span>
+            </div>
+        </div>
+        <button class="save-btn" onclick="saveApiKey()">Save API Key</button>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 <script>
-// Globals
-var apiKey = '';
-var videoEl = null;
-var canvasEl = null;
-var cameraReady = false;
+(function() {
+    'use strict';
 
-// Log function - writes to screen
-function log(msg) {
-    console.log(msg);
-    var el = document.getElementById('log');
-    var time = new Date().toLocaleTimeString();
-    el.innerHTML = '[' + time + '] ' + msg + '<br>' + el.innerHTML;
-}
+    // ===== STATE =====
+    var apiKey = localStorage.getItem('os_key') || '';
+    var history = [];
+    try { history = JSON.parse(localStorage.getItem('os_history') || '[]'); } catch(e) {}
+    var busy = false;
+    var camReady = false;
 
-// Init on load
-window.onload = function() {
-    log('Page loaded');
-    
-    videoEl = document.getElementById('video');
-    canvasEl = document.getElementById('canvas');
-    
-    // Load saved key
-    apiKey = localStorage.getItem('openai_key') || '';
-    if (apiKey) {
-        document.getElementById('apiKey').value = apiKey;
-        document.getElementById('keyStatus').textContent = '✓ API key loaded';
-        log('API key found in storage');
-    } else {
-        log('No API key saved');
+    // ===== ELEMENTS =====
+    var video = document.getElementById('video');
+    var canvas = document.getElementById('canvas');
+    var viewfinder = document.getElementById('viewfinder');
+    var liveBadge = document.getElementById('liveBadge');
+    var captureBtn = document.getElementById('captureBtn');
+    var galleryCount = document.getElementById('galleryCount');
+    var permissionScreen = document.getElementById('permissionScreen');
+    var loadingOverlay = document.getElementById('loadingOverlay');
+    var loadingText = document.getElementById('loadingText');
+    var storyPanel = document.getElementById('storyPanel');
+    var storyBody = document.getElementById('storyBody');
+    var galleryPanel = document.getElementById('galleryPanel');
+    var galleryGrid = document.getElementById('galleryGrid');
+    var settingsPanel = document.getElementById('settingsPanel');
+    var apiKeyInput = document.getElementById('apiKeyInput');
+    var statusIndicator = document.getElementById('statusIndicator');
+    var statusText = document.getElementById('statusText');
+    var toast = document.getElementById('toast');
+    var debug = document.getElementById('debug');
+
+    // ===== DEBUG (hidden by default, triple-tap header to show) =====
+    var tapCount = 0;
+    document.querySelector('.header').addEventListener('click', function() {
+        tapCount++;
+        setTimeout(function() { tapCount = 0; }, 500);
+        if (tapCount >= 3) {
+            debug.classList.toggle('show');
+            tapCount = 0;
+        }
+    });
+
+    function log(msg) {
+        console.log(msg);
+        var time = new Date().toLocaleTimeString();
+        debug.innerHTML = '[' + time + '] ' + msg + '<br>' + debug.innerHTML;
     }
-    
-    // Check camera permission
-    checkCamera();
-};
 
-function checkCamera() {
-    log('Checking camera permission...');
-    
-    if (navigator.permissions && navigator.permissions.query) {
-        navigator.permissions.query({name: 'camera'})
-            .then(function(result) {
-                log('Permission: ' + result.state);
-                if (result.state === 'granted') {
-                    document.getElementById('permission').classList.add('hide');
-                    startCamera();
-                }
-            })
-            .catch(function(err) {
-                log('Permission check failed: ' + err.message);
-            });
-    } else {
-        log('Permissions API not available');
+    // ===== LOADING MESSAGES =====
+    var loadingMessages = ['Analyzing...', 'Identifying object...', 'Researching history...', 'Almost there...'];
+    var loadingIndex = 0;
+    var loadingInterval = null;
+
+    function startLoadingMessages() {
+        loadingIndex = 0;
+        loadingText.textContent = loadingMessages[0];
+        loadingInterval = setInterval(function() {
+            loadingIndex = (loadingIndex + 1) % loadingMessages.length;
+            loadingText.textContent = loadingMessages[loadingIndex];
+        }, 2000);
     }
-}
+    function stopLoadingMessages() {
+        if (loadingInterval) clearInterval(loadingInterval);
+    }
 
-function enableCamera() {
-    log('Enable camera clicked');
-    startCamera();
-}
+    // ===== INIT =====
+    function init() {
+        log('Init');
 
-function startCamera() {
-    log('Starting camera...');
-    
-    var constraints = {
-        video: {
-            facingMode: 'environment',
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-        },
-        audio: false
+        if (apiKey) {
+            apiKeyInput.value = apiKey;
+            statusIndicator.classList.add('ok');
+            statusText.textContent = 'Configured';
+        }
+
+        updateGalleryCount();
+        checkCamera();
+    }
+
+    function updateGalleryCount() {
+        if (history.length > 0) {
+            galleryCount.textContent = history.length;
+            galleryCount.classList.add('show');
+        } else {
+            galleryCount.classList.remove('show');
+        }
+    }
+
+    // ===== CAMERA =====
+    function checkCamera() {
+        log('Checking camera...');
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({name: 'camera'})
+                .then(function(result) {
+                    log('Permission: ' + result.state);
+                    if (result.state === 'granted') {
+                        permissionScreen.classList.add('hide');
+                        startCamera();
+                    }
+                })
+                .catch(function(e) { log('Perm error: ' + e.message); });
+        }
+    }
+
+    window.enableCamera = function() {
+        log('Enable camera clicked');
+        startCamera();
     };
-    
-    navigator.mediaDevices.getUserMedia(constraints)
+
+    function startCamera() {
+        log('Starting camera...');
+        navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: {ideal: 1280}, height: {ideal: 720} },
+            audio: false
+        })
         .then(function(stream) {
-            log('Got camera stream');
-            videoEl.srcObject = stream;
-            videoEl.play();
-            
-            videoEl.onloadedmetadata = function() {
-                log('Video ready: ' + videoEl.videoWidth + 'x' + videoEl.videoHeight);
-                cameraReady = true;
-                document.getElementById('permission').classList.add('hide');
+            log('Got stream');
+            video.srcObject = stream;
+            video.play();
+            video.onloadedmetadata = function() {
+                log('Video ready: ' + video.videoWidth + 'x' + video.videoHeight);
+                camReady = true;
+                liveBadge.classList.add('show');
+                permissionScreen.classList.add('hide');
             };
         })
-        .catch(function(err) {
-            log('Camera error: ' + err.name + ' - ' + err.message);
-            alert('Camera error: ' + err.message);
+        .catch(function(e) {
+            log('Camera error: ' + e.message);
+            showToast('Camera error: ' + e.message, true);
         });
-}
-
-// CAPTURE - main function
-function handleCapture() {
-    log('>>> CAPTURE BUTTON CLICKED <<<');
-    
-    // Immediate feedback
-    document.getElementById('captureBtn').style.background = '#c9a227';
-    setTimeout(function() {
-        document.getElementById('captureBtn').style.background = '#f7f3eb';
-    }, 200);
-    
-    if (!apiKey) {
-        log('No API key!');
-        alert('Please add your OpenAI API key in Settings first');
-        openSettings();
-        return;
     }
-    
-    if (!cameraReady) {
-        log('Camera not ready');
-        alert('Camera not ready yet');
-        return;
-    }
-    
-    // Capture frame
-    log('Capturing frame...');
-    var w = videoEl.videoWidth || 640;
-    var h = videoEl.videoHeight || 480;
-    canvasEl.width = w;
-    canvasEl.height = h;
-    var ctx = canvasEl.getContext('2d');
-    ctx.drawImage(videoEl, 0, 0, w, h);
-    var imageData = canvasEl.toDataURL('image/jpeg', 0.7);
-    log('Frame captured: ' + imageData.length + ' bytes');
-    
-    // Show loading
-    document.getElementById('loading').classList.add('show');
-    
-    // Call API
-    callAPI(imageData);
-}
 
-function callAPI(imageData) {
-    log('Calling OpenAI API...');
-    
-    var base64 = imageData.split(',')[1];
-    
-    var payload = {
-        model: 'gpt-4o',
-        max_tokens: 800,
-        response_format: { type: 'json_object' },
-        messages: [
-            {
-                role: 'system',
-                content: 'You analyze images and respond with JSON containing: title, era, style, history, funFact.'
-            },
-            {
-                role: 'user',
-                content: [
-                    {
-                        type: 'text',
-                        text: 'Analyze this image. What object or building is this? Provide title, era, style, history, and a fun fact.'
-                    },
-                    {
-                        type: 'image_url',
-                        image_url: {
-                            url: 'data:image/jpeg;base64,' + base64,
-                            detail: 'low'
-                        }
-                    }
-                ]
-            }
-        ]
-    };
-    
-    log('Sending request...');
-    
-    fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + apiKey
-        },
-        body: JSON.stringify(payload)
-    })
-    .then(function(response) {
-        log('Response status: ' + response.status);
-        return response.json();
-    })
-    .then(function(data) {
-        document.getElementById('loading').classList.remove('show');
-        
-        if (data.error) {
-            log('API Error: ' + data.error.message);
-            alert('API Error: ' + data.error.message);
+    // ===== CAPTURE =====
+    window.handleCapture = function() {
+        log('Capture clicked');
+
+        if (busy) return;
+
+        if (!apiKey) {
+            showToast('Add your API key in Settings', true);
+            openSettings();
             return;
         }
-        
-        var content = data.choices[0].message.content;
-        log('Raw response: ' + content);
-        
-        // Try to parse JSON - multiple methods
-        var result = null;
-        
-        try {
-            // Method 1: Direct parse
-            result = JSON.parse(content);
-            log('Parsed directly');
-        } catch(e1) {
-            log('Direct parse failed, trying to extract...');
-            
-            // Method 2: Remove markdown code blocks
-            var cleaned = content;
-            cleaned = cleaned.replace(/```json\s*/gi, '');
-            cleaned = cleaned.replace(/```\s*/g, '');
-            cleaned = cleaned.trim();
-            
+
+        if (!camReady) {
+            showToast('Camera not ready', true);
+            return;
+        }
+
+        busy = true;
+        viewfinder.classList.add('scanning');
+        captureBtn.classList.add('busy');
+
+        var w = video.videoWidth || 640;
+        var h = video.videoHeight || 480;
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+        var imageData = canvas.toDataURL('image/jpeg', 0.7);
+        log('Captured: ' + imageData.length + ' bytes');
+
+        loadingOverlay.classList.add('show');
+        startLoadingMessages();
+
+        callAPI(imageData);
+    };
+
+    function callAPI(imageData) {
+        log('Calling API...');
+        var base64 = imageData.split(',')[1];
+
+        var payload = {
+            model: 'gpt-4o',
+            max_tokens: 800,
+            response_format: { type: 'json_object' },
+            messages: [
+                { role: 'system', content: 'You analyze images and respond with JSON containing: title, era, style, origin, history (2 paragraphs), characteristics (array of 4 items), funFact, materials.' },
+                { role: 'user', content: [
+                    { type: 'text', text: 'Analyze this image. What object or building is this? Provide detailed information.' },
+                    { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + base64, detail: 'low' } }
+                ]}
+            ]
+        };
+
+        fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+            body: JSON.stringify(payload)
+        })
+        .then(function(r) { log('Status: ' + r.status); return r.json(); })
+        .then(function(data) {
+            stopLoadingMessages();
+            loadingOverlay.classList.remove('show');
+            viewfinder.classList.remove('scanning');
+            captureBtn.classList.remove('busy');
+            busy = false;
+
+            if (data.error) {
+                log('API Error: ' + data.error.message);
+                showToast(data.error.message, true);
+                return;
+            }
+
+            var content = data.choices[0].message.content;
+            log('Response: ' + content.substring(0, 100));
+
+            var result = null;
             try {
-                result = JSON.parse(cleaned);
-                log('Parsed after cleaning markdown');
-            } catch(e2) {
-                // Method 3: Find JSON object in text
-                var jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    try {
-                        result = JSON.parse(jsonMatch[0]);
-                        log('Parsed from extracted JSON');
-                    } catch(e3) {
-                        log('All parse methods failed');
-                    }
+                result = JSON.parse(content);
+            } catch(e) {
+                var cleaned = content.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+                try { result = JSON.parse(cleaned); } catch(e2) {
+                    var m = cleaned.match(/\{[\s\S]*\}/);
+                    if (m) try { result = JSON.parse(m[0]); } catch(e3) {}
                 }
             }
+
+            if (!result) {
+                result = { title: 'Analysis', history: content };
+            }
+
+            // Save to history
+            history.unshift({ id: Date.now(), img: imageData, data: result });
+            if (history.length > 50) history.pop();
+            localStorage.setItem('os_history', JSON.stringify(history));
+            updateGalleryCount();
+
+            renderStory(result, imageData);
+            storyPanel.classList.add('open');
+        })
+        .catch(function(e) {
+            stopLoadingMessages();
+            loadingOverlay.classList.remove('show');
+            viewfinder.classList.remove('scanning');
+            captureBtn.classList.remove('busy');
+            busy = false;
+            log('Fetch error: ' + e.message);
+            showToast('Error: ' + e.message, true);
+        });
+    }
+
+    // ===== RENDER STORY =====
+    function renderStory(s, img) {
+        var html = '<div class="story-hero"><img src="' + img + '" alt=""><div class="story-hero-fade"></div>';
+        html += '<button class="close-btn" onclick="closeStory()"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>';
+        html += '<div class="story-content">';
+        html += '<span class="story-era">' + (s.era || 'Unknown Era') + '</span>';
+        html += '<h1 class="story-title">' + (s.title || 'Unknown Object') + '</h1>';
+
+        if (s.style || s.origin) {
+            html += '<div class="story-section"><div class="story-section-title">Style & Origin</div>';
+            html += '<p class="story-text"><strong>' + (s.style || 'Unknown style') + '</strong>';
+            if (s.origin) html += ' · ' + s.origin;
+            html += '</p></div>';
         }
-        
-        if (!result) {
-            // Show raw response so user can see what happened
-            log('Parse failed - showing raw');
-            showResult({
-                title: 'Analysis Result',
-                history: content
-            }, imageData);
+
+        html += '<div class="story-section"><div class="story-section-title">The Story</div>';
+        html += '<p class="story-text">' + (s.history || 'No information available.') + '</p></div>';
+
+        if (s.characteristics && s.characteristics.length) {
+            html += '<div class="story-section"><div class="story-section-title">Characteristics</div>';
+            html += '<div class="tags">' + s.characteristics.map(function(c) { return '<span class="tag">' + c + '</span>'; }).join('') + '</div></div>';
+        }
+
+        if (s.materials) {
+            html += '<div class="story-section"><div class="story-section-title">Materials</div>';
+            html += '<p class="story-text">' + s.materials + '</p></div>';
+        }
+
+        if (s.funFact) {
+            html += '<div class="story-section"><div class="story-section-title">Did You Know?</div>';
+            html += '<div class="fun-fact-box"><p class="story-text">' + s.funFact + '</p></div></div>';
+        }
+
+        html += '</div>';
+        storyBody.innerHTML = html;
+    }
+
+    window.closeStory = function() {
+        storyPanel.classList.remove('open');
+    };
+
+    // ===== GALLERY =====
+    window.openGallery = function() {
+        renderGallery();
+        galleryPanel.classList.add('open');
+    };
+
+    window.closeGallery = function() {
+        galleryPanel.classList.remove('open');
+    };
+
+    function renderGallery() {
+        if (history.length === 0) {
+            galleryGrid.innerHTML = '<div class="gallery-empty"><div class="gallery-empty-icon">📜</div><p>No discoveries yet.<br>Point your camera at something interesting!</p></div>';
             return;
         }
-        
-        log('Success: ' + result.title);
-        showResult(result, imageData);
-    })
-    .catch(function(err) {
-        document.getElementById('loading').classList.remove('show');
-        log('Fetch error: ' + err.message);
-        alert('Error: ' + err.message);
-    });
-}
 
-function showResult(data, img) {
-    var html = '<img src="' + img + '" alt="">';
-    html += '<h1>' + (data.title || 'Unknown') + '</h1>';
-    if (data.era) html += '<p><strong>Era:</strong> ' + data.era + '</p>';
-    if (data.style) html += '<p><strong>Style:</strong> ' + data.style + '</p>';
-    if (data.history) html += '<p>' + data.history + '</p>';
-    if (data.funFact) html += '<p><strong>Fun fact:</strong> ' + data.funFact + '</p>';
-    
-    document.getElementById('resultContent').innerHTML = html;
-    document.getElementById('result').classList.add('show');
-}
+        galleryGrid.innerHTML = history.map(function(item) {
+            return '<div class="gallery-item" data-id="' + item.id + '">' +
+                '<img class="gallery-item-img" src="' + item.img + '" alt="">' +
+                '<div class="gallery-item-info">' +
+                '<div class="gallery-item-title">' + (item.data.title || 'Unknown') + '</div>' +
+                '<div class="gallery-item-era">' + (item.data.era || '') + '</div>' +
+                '</div></div>';
+        }).join('');
 
-function closeResult() {
-    document.getElementById('result').classList.remove('show');
-}
+        galleryGrid.querySelectorAll('.gallery-item').forEach(function(el) {
+            el.onclick = function() {
+                var item = history.find(function(h) { return h.id === parseInt(el.dataset.id); });
+                if (item) {
+                    renderStory(item.data, item.img);
+                    closeGallery();
+                    setTimeout(function() { storyPanel.classList.add('open'); }, 250);
+                }
+            };
+        });
+    }
 
-function openSettings() {
-    log('Opening settings');
-    document.getElementById('settings').classList.add('show');
-}
+    // ===== SETTINGS =====
+    window.openSettings = function() {
+        settingsPanel.classList.add('open');
+    };
 
-function closeSettings() {
-    document.getElementById('settings').classList.remove('show');
-}
+    window.closeSettings = function() {
+        settingsPanel.classList.remove('open');
+    };
 
-function saveApiKey() {
-    apiKey = document.getElementById('apiKey').value.trim();
-    localStorage.setItem('openai_key', apiKey);
-    document.getElementById('keyStatus').textContent = apiKey ? '✓ API key saved!' : 'API key cleared';
-    log('API key saved');
-    
-    setTimeout(closeSettings, 500);
-}
+    window.saveApiKey = function() {
+        apiKey = apiKeyInput.value.trim();
+        localStorage.setItem('os_key', apiKey);
+        if (apiKey) {
+            statusIndicator.classList.add('ok');
+            statusText.textContent = 'Configured';
+            showToast('API key saved!');
+        } else {
+            statusIndicator.classList.remove('ok');
+            statusText.textContent = 'Not configured';
+            showToast('API key removed');
+        }
+        setTimeout(closeSettings, 400);
+    };
 
-log('Script loaded');
+    // ===== TOAST =====
+    function showToast(msg, isError) {
+        toast.textContent = msg;
+        toast.className = 'toast show' + (isError ? ' error' : '');
+        setTimeout(function() { toast.classList.remove('show'); }, 3500);
+    }
+
+    // ===== START =====
+    init();
+    log('Ready');
+})();
 </script>
 
 </body>
