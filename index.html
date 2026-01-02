@@ -5,413 +5,414 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>ObjectStory</title>
     <meta name="theme-color" content="#1a1612">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --parchment: #f7f3eb;
-            --ink: #1a1612;
-            --sepia: #8b7355;
-            --gold: #c9a227;
-            --rust: #a65d3f;
-            --sage: #6b7c5e;
-            --font-display: 'Cormorant Garamond', Georgia, serif;
-            --font-body: 'DM Sans', system-ui, sans-serif;
-        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; overflow: hidden; }
-        body { font-family: var(--font-body); background: var(--ink); color: var(--parchment); }
+        body { font-family: system-ui, sans-serif; background: #1a1612; color: #f7f3eb; }
 
-        /* Camera */
-        .camera-container { position: fixed; inset: 0; background: #000; }
+        .camera { position: fixed; inset: 0; background: #000; }
         #video { width: 100%; height: 100%; object-fit: cover; }
-        .overlay { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 40%, rgba(26,22,18,0.4) 100%); }
 
-        /* Viewfinder */
-        .viewfinder {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 75%; max-width: 300px; aspect-ratio: 1;
-            border: 1px solid rgba(201,162,39,0.3); border-radius: 12px;
-            pointer-events: none; transition: all 0.4s;
-        }
-        .viewfinder::before, .viewfinder::after {
-            content: ''; position: absolute; width: 30px; height: 30px;
-            border-color: var(--gold); border-style: solid;
-        }
-        .viewfinder::before { top: -1px; left: -1px; border-width: 3px 0 0 3px; border-radius: 12px 0 0 0; }
-        .viewfinder::after { bottom: -1px; right: -1px; border-width: 0 3px 3px 0; border-radius: 0 0 12px 0; }
-        .viewfinder.scanning { border-color: var(--gold); box-shadow: 0 0 50px rgba(201,162,39,0.4); }
-        .scan-line {
-            position: absolute; left: 10%; right: 10%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--gold), transparent);
-            opacity: 0; box-shadow: 0 0 15px var(--gold);
-        }
-        .viewfinder.scanning .scan-line { opacity: 1; animation: scan 1.5s ease-in-out infinite; }
-        @keyframes scan { 0%,100% { top: 10%; } 50% { top: 85%; } }
-
-        /* Header */
         .header {
-            position: fixed; top: 0; left: 0; right: 0; padding: 16px 20px; z-index: 10;
-            background: linear-gradient(to bottom, rgba(26,22,18,0.95), transparent);
+            position: fixed; top: 0; left: 0; right: 0; padding: 16px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            z-index: 10; font-size: 1.4rem;
         }
-        .logo { font-family: var(--font-display); font-size: 1.5rem; }
-        .logo span { color: var(--gold); font-style: italic; }
+        .header span { color: #c9a227; }
 
-        /* Live badge */
-        .live-badge {
-            position: fixed; top: 70px; left: 20px; z-index: 10;
-            display: none; align-items: center; gap: 6px;
-            font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em;
+        /* Debug box - always visible */
+        #log {
+            position: fixed; top: 60px; left: 10px; right: 10px;
+            background: rgba(0,0,0,0.85); color: #0f0; font-family: monospace;
+            font-size: 11px; padding: 10px; border-radius: 8px;
+            max-height: 120px; overflow-y: auto; z-index: 100;
+            border: 1px solid #0f0;
         }
-        .live-badge.show { display: flex; }
-        .live-dot { width: 8px; height: 8px; background: #e53935; border-radius: 50%; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-        /* Debug info */
-        .debug {
-            position: fixed; top: 100px; left: 10px; right: 10px; z-index: 15;
-            font-size: 0.7rem; color: var(--gold); background: rgba(0,0,0,0.7);
-            padding: 8px; border-radius: 6px; display: none; max-height: 150px; overflow: auto;
-        }
-        .debug.show { display: block; }
-
-        /* Controls */
         .controls {
-            position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
-            padding: 20px 20px 40px; display: flex; justify-content: center; align-items: center;
-            background: linear-gradient(to top, rgba(26,22,18,0.98), transparent);
+            position: fixed; bottom: 0; left: 0; right: 0;
+            padding: 20px; padding-bottom: 40px;
+            background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10;
         }
-        .capture-btn {
-            width: 72px; height: 72px; border-radius: 50%;
-            background: var(--parchment); border: 4px solid var(--gold);
-            cursor: pointer; position: relative;
-            box-shadow: 0 4px 25px rgba(0,0,0,0.5); transition: all 0.2s;
-        }
-        .capture-btn:active { transform: scale(0.9); }
-        .capture-btn.busy { animation: glow 1s infinite; pointer-events: none; }
-        @keyframes glow { 0%,100% { box-shadow: 0 4px 25px rgba(0,0,0,0.5); } 50% { box-shadow: 0 4px 40px rgba(201,162,39,0.7); } }
-        .hint {
-            position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
-            margin-bottom: 12px; font-size: 0.7rem; text-transform: uppercase;
-            letter-spacing: 0.12em; color: rgba(247,243,235,0.6); white-space: nowrap;
-        }
-        .side-btn {
-            position: absolute; bottom: 44px; width: 48px; height: 48px;
-            border-radius: 10px; background: rgba(247,243,235,0.1);
-            border: 1px solid rgba(247,243,235,0.2); cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .side-btn svg { width: 22px; height: 22px; stroke: var(--parchment); fill: none; }
-        .gallery-btn { left: 20px; }
-        .settings-btn { right: 20px; }
 
-        /* Loading overlay */
-        .loading {
-            position: fixed; inset: 0; z-index: 50;
-            background: rgba(26,22,18,0.9); display: none;
-            flex-direction: column; align-items: center; justify-content: center;
+        /* Big obvious button */
+        #captureBtn {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: #f7f3eb; border: 5px solid #c9a227;
+            cursor: pointer; font-size: 24px;
+            display: flex; align-items: center; justify-content: center;
+            -webkit-tap-highlight-color: rgba(201,162,39,0.5);
+            touch-action: manipulation;
         }
-        .loading.show { display: flex; }
+        #captureBtn:active { transform: scale(0.9); background: #c9a227; }
+
+        #settingsBtn {
+            position: absolute; right: 20px; bottom: 45px;
+            width: 50px; height: 50px; border-radius: 10px;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
+            color: #fff; font-size: 20px; cursor: pointer;
+        }
+
+        /* Loading */
+        #loading {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column; z-index: 200;
+        }
+        #loading.show { display: flex; }
         .spinner {
-            width: 48px; height: 48px; border: 3px solid rgba(201,162,39,0.2);
-            border-top-color: var(--gold); border-radius: 50%;
-            animation: spin 0.7s linear infinite; margin-bottom: 16px;
+            width: 50px; height: 50px; border: 4px solid #333;
+            border-top-color: #c9a227; border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin-bottom: 20px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-text { font-family: var(--font-display); font-style: italic; color: var(--sepia); }
 
-        /* Panels */
-        .panel {
-            position: fixed; inset: 0; z-index: 100; background: var(--ink);
-            transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.23,1,0.32,1);
-            display: flex; flex-direction: column; overflow: hidden;
+        /* Result panel */
+        #result {
+            position: fixed; inset: 0; background: #1a1612;
+            z-index: 150; transform: translateY(100%);
+            transition: transform 0.4s ease; overflow-y: auto;
+            padding: 20px; padding-top: 60px;
         }
-        .panel.from-right { transform: translateX(100%); }
-        .panel.from-left { transform: translateX(-100%); }
-        .panel.open { transform: translate(0); }
+        #result.show { transform: translateY(0); }
+        #closeResult {
+            position: fixed; top: 15px; right: 15px; z-index: 160;
+            width: 44px; height: 44px; border-radius: 50%;
+            background: #333; border: none; color: #fff;
+            font-size: 24px; cursor: pointer;
+        }
+        #resultContent { line-height: 1.6; }
+        #resultContent h1 { color: #c9a227; margin-bottom: 10px; }
+        #resultContent img { width: 100%; border-radius: 10px; margin-bottom: 15px; }
 
-        .panel-header {
-            padding: 18px 20px; border-bottom: 1px solid rgba(247,243,235,0.1);
-            display: flex; align-items: center; justify-content: space-between;
+        /* Settings panel */
+        #settings {
+            position: fixed; inset: 0; background: #1a1612;
+            z-index: 150; transform: translateX(100%);
+            transition: transform 0.4s ease; padding: 20px;
         }
-        .panel-title { font-family: var(--font-display); font-size: 1.4rem; }
-        .close-btn {
-            width: 40px; height: 40px; border-radius: 50%;
-            background: rgba(247,243,235,0.1); border: none; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
+        #settings.show { transform: translateX(0); }
+        #settings h2 { margin-bottom: 20px; }
+        #settings input {
+            width: 100%; padding: 15px; margin-bottom: 15px;
+            background: #333; border: 1px solid #555; border-radius: 8px;
+            color: #fff; font-size: 16px;
         }
-        .close-btn svg { width: 18px; height: 18px; stroke: var(--parchment); fill: none; }
-        .panel-body { flex: 1; overflow-y: auto; padding: 20px; -webkit-overflow-scrolling: touch; }
-
-        /* Story panel */
-        .story-img-wrap { position: relative; height: 35vh; min-height: 200px; margin: -20px -20px 0; }
-        .story-img { width: 100%; height: 100%; object-fit: cover; }
-        .story-img-fade { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 50%, var(--ink) 100%); }
-        .story-close { position: absolute; top: 12px; right: 12px; background: rgba(26,22,18,0.7); }
-
-        .story-era {
-            display: inline-block; font-size: 0.65rem; text-transform: uppercase;
-            letter-spacing: 0.15em; color: var(--gold); background: rgba(201,162,39,0.1);
-            padding: 5px 10px; border-radius: 4px; margin-bottom: 14px;
-        }
-        .story-title { font-family: var(--font-display); font-size: 1.8rem; line-height: 1.2; margin-bottom: 6px; }
-        .story-subtitle { font-family: var(--font-display); font-style: italic; color: var(--sepia); margin-bottom: 20px; }
-        .story-section { margin-bottom: 24px; }
-        .story-section-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold); margin-bottom: 10px; }
-        .story-text { font-size: 0.9rem; color: rgba(247,243,235,0.85); line-height: 1.7; }
-        .tags { display: flex; flex-wrap: wrap; gap: 6px; }
-        .tag { font-size: 0.75rem; padding: 6px 12px; background: rgba(107,124,94,0.15); border: 1px solid rgba(107,124,94,0.3); border-radius: 16px; color: var(--sage); }
-        .fun-fact { background: rgba(166,93,63,0.1); border-left: 3px solid var(--rust); padding: 14px 16px; border-radius: 0 6px 6px 0; }
-
-        /* Settings */
-        .setting-group { margin-bottom: 28px; }
-        .setting-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--sepia); margin-bottom: 10px; }
-        .setting-input {
-            width: 100%; padding: 12px 14px; background: rgba(247,243,235,0.05);
-            border: 1px solid rgba(247,243,235,0.15); border-radius: 6px;
-            color: var(--parchment); font-family: var(--font-body); font-size: 0.95rem;
-        }
-        .setting-input:focus { outline: none; border-color: var(--gold); }
-        .api-status { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 0.75rem; }
-        .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--rust); }
-        .status-dot.ok { background: var(--sage); }
-        .save-btn {
-            width: 100%; padding: 14px; background: var(--gold); color: var(--ink);
-            border: none; border-radius: 6px; font-family: var(--font-body);
-            font-size: 0.95rem; font-weight: 500; cursor: pointer;
+        #settings button {
+            width: 100%; padding: 15px; background: #c9a227;
+            border: none; border-radius: 8px; color: #000;
+            font-size: 16px; font-weight: bold; cursor: pointer;
+            margin-bottom: 10px;
         }
 
-        /* History */
-        .history-empty { text-align: center; padding: 50px 20px; color: var(--sepia); }
-        .history-item {
-            display: flex; gap: 14px; padding: 14px; background: rgba(247,243,235,0.03);
-            border-radius: 10px; margin-bottom: 10px; cursor: pointer;
+        /* Permission screen */
+        #permission {
+            position: fixed; inset: 0; background: #1a1612;
+            z-index: 300; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center; padding: 40px;
         }
-        .history-thumb { width: 64px; height: 64px; border-radius: 6px; object-fit: cover; flex-shrink: 0; }
-        .history-info { flex: 1; min-width: 0; }
-        .history-title { font-family: var(--font-display); font-size: 1rem; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .history-era { font-size: 0.7rem; color: var(--gold); }
-
-        /* Permission */
-        .permission {
-            position: fixed; inset: 0; z-index: 200; background: var(--ink);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 40px; text-align: center;
+        #permission.hide { display: none; }
+        #permission h2 { font-size: 1.5rem; margin-bottom: 15px; }
+        #permission p { color: #8b7355; margin-bottom: 30px; }
+        #permission button {
+            padding: 16px 40px; background: #c9a227; border: none;
+            border-radius: 8px; color: #000; font-size: 16px;
+            font-weight: bold; cursor: pointer;
         }
-        .permission.hide { display: none; }
-        .permission svg { width: 70px; height: 70px; stroke: var(--gold); fill: none; margin-bottom: 20px; }
-        .permission h2 { font-family: var(--font-display); font-size: 1.6rem; margin-bottom: 10px; }
-        .permission p { color: var(--sepia); margin-bottom: 28px; max-width: 280px; }
-        .permission button {
-            padding: 14px 36px; background: var(--gold); color: var(--ink);
-            border: none; border-radius: 6px; font-family: var(--font-body);
-            font-size: 0.95rem; font-weight: 500; cursor: pointer;
-        }
-
-        /* Toast */
-        .toast {
-            position: fixed; bottom: 130px; left: 50%; transform: translateX(-50%) translateY(80px);
-            background: var(--parchment); color: var(--ink); padding: 10px 20px;
-            border-radius: 6px; font-size: 0.85rem; opacity: 0; transition: all 0.3s;
-            z-index: 300; max-width: 85%; text-align: center;
-        }
-        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-        .toast.err { background: var(--rust); color: var(--parchment); }
 
         #canvas { display: none; }
-
-        @supports (padding-top: env(safe-area-inset-top)) {
-            .header { padding-top: calc(16px + env(safe-area-inset-top)); }
-            .live-badge { top: calc(70px + env(safe-area-inset-top)); }
-            .controls { padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
-        }
     </style>
 </head>
 <body>
 
-<div class="camera-container">
+<div class="camera">
     <video id="video" autoplay playsinline muted></video>
-    <div class="overlay"></div>
-    <div class="viewfinder" id="viewfinder"><div class="scan-line"></div></div>
 </div>
 
-<header class="header"><div class="logo">Object<span>Story</span></div></header>
+<div class="header">Object<span>Story</span></div>
 
-<div class="live-badge" id="liveBadge"><div class="live-dot"></div><span>Live</span></div>
-
-<div class="debug" id="debug"></div>
+<div id="log">Debug log ready...</div>
 
 <div class="controls">
-    <button class="side-btn gallery-btn" id="historyBtn">
-        <svg viewBox="0 0 24 24" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    </button>
-    <button class="capture-btn" id="captureBtn"><span class="hint">Tap to discover</span></button>
-    <button class="side-btn settings-btn" id="settingsBtn">
-        <svg viewBox="0 0 24 24" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M4.22 4.22l2.83 2.83m9.9 9.9l2.83 2.83M1 12h4m14 0h4M4.22 19.78l2.83-2.83m9.9-9.9l2.83-2.83"/></svg>
-    </button>
+    <button id="captureBtn" onclick="handleCapture()">📷</button>
+    <button id="settingsBtn" onclick="openSettings()">⚙️</button>
 </div>
 
 <canvas id="canvas"></canvas>
 
-<!-- Permission -->
-<div class="permission" id="permission">
-    <svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2v11z"/><circle cx="12" cy="13" r="4"/></svg>
-    <h2>Enable Camera</h2>
-    <p>Point at any object or building to discover its story</p>
-    <button id="enableBtn">Enable Camera</button>
+<div id="permission">
+    <h2>📷 Enable Camera</h2>
+    <p>Point at any object to discover its story</p>
+    <button onclick="enableCamera()">Enable Camera</button>
 </div>
 
-<!-- Loading -->
-<div class="loading" id="loading">
+<div id="loading">
     <div class="spinner"></div>
-    <div class="loading-text" id="loadingText">Analyzing...</div>
+    <div id="loadingText">Analyzing...</div>
 </div>
 
-<!-- Story Panel -->
-<div class="panel" id="storyPanel">
-    <div class="panel-body" id="storyBody"></div>
+<div id="result">
+    <button id="closeResult" onclick="closeResult()">✕</button>
+    <div id="resultContent"></div>
 </div>
 
-<!-- Settings Panel -->
-<div class="panel from-right" id="settingsPanel">
-    <div class="panel-header">
-        <div class="panel-title">Settings</div>
-        <button class="close-btn" id="closeSettings"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-    </div>
-    <div class="panel-body">
-        <div class="setting-group">
-            <div class="setting-label">OpenAI API Key</div>
-            <input type="text" class="setting-input" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
-            <div class="api-status"><div class="status-dot" id="statusDot"></div><span id="statusText">Not configured</span></div>
-        </div>
-        <button class="save-btn" id="saveBtn">Save Settings</button>
-    </div>
+<div id="settings">
+    <h2>⚙️ Settings</h2>
+    <p style="color:#8b7355;margin-bottom:15px;">Enter your OpenAI API key:</p>
+    <input type="text" id="apiKey" placeholder="sk-..." autocomplete="off">
+    <button onclick="saveApiKey()">Save API Key</button>
+    <button onclick="closeSettings()" style="background:#333;color:#fff;">Close</button>
+    <p id="keyStatus" style="margin-top:15px;color:#8b7355;"></p>
 </div>
-
-<!-- History Panel -->
-<div class="panel from-left" id="historyPanel">
-    <div class="panel-header">
-        <div class="panel-title">Discoveries</div>
-        <button class="close-btn" id="closeHistory"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-    </div>
-    <div class="panel-body" id="historyBody"></div>
-</div>
-
-<div class="toast" id="toast"></div>
 
 <script>
-(function() {
-    'use strict';
+// Globals
+var apiKey = '';
+var videoEl = null;
+var canvasEl = null;
+var cameraReady = false;
+
+// Log function - writes to screen
+function log(msg) {
+    console.log(msg);
+    var el = document.getElementById('log');
+    var time = new Date().toLocaleTimeString();
+    el.innerHTML = '[' + time + '] ' + msg + '<br>' + el.innerHTML;
+}
+
+// Init on load
+window.onload = function() {
+    log('Page loaded');
     
-    // === State ===
-    let apiKey = localStorage.getItem('os_key') || '';
-    let history = [];
-    try { history = JSON.parse(localStorage.getItem('os_history') || '[]'); } catch(e) {}
-    let busy = false;
-    let camReady = false;
-
-    // === Elements ===
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const viewfinder = document.getElementById('viewfinder');
-    const liveBadge = document.getElementById('liveBadge');
-    const debug = document.getElementById('debug');
-    const captureBtn = document.getElementById('captureBtn');
-    const settingsBtn = document.getElementById('settingsBtn');
-    const historyBtn = document.getElementById('historyBtn');
-    const permission = document.getElementById('permission');
-    const enableBtn = document.getElementById('enableBtn');
-    const loading = document.getElementById('loading');
-    const loadingText = document.getElementById('loadingText');
-    const storyPanel = document.getElementById('storyPanel');
-    const storyBody = document.getElementById('storyBody');
-    const settingsPanel = document.getElementById('settingsPanel');
-    const closeSettings = document.getElementById('closeSettings');
-    const apiKeyInput = document.getElementById('apiKeyInput');
-    const statusDot = document.getElementById('statusDot');
-    const statusText = document.getElementById('statusText');
-    const saveBtn = document.getElementById('saveBtn');
-    const historyPanel = document.getElementById('historyPanel');
-    const historyBody = document.getElementById('historyBody');
-    const closeHistory = document.getElementById('closeHistory');
-    const toast = document.getElementById('toast');
-
-    // === Debug logging ===
-    function log(msg) {
-        console.log(msg);
-        debug.textContent = msg + '\n' + debug.textContent;
-        debug.classList.add('show');
+    videoEl = document.getElementById('video');
+    canvasEl = document.getElementById('canvas');
+    
+    // Load saved key
+    apiKey = localStorage.getItem('openai_key') || '';
+    if (apiKey) {
+        document.getElementById('apiKey').value = apiKey;
+        document.getElementById('keyStatus').textContent = '✓ API key loaded';
+        log('API key found in storage');
+    } else {
+        log('No API key saved');
     }
+    
+    // Check camera permission
+    checkCamera();
+};
 
-    // === Init ===
-    function init() {
-        log('Init started');
-        
-        if (apiKey) {
-            apiKeyInput.value = apiKey;
-            statusDot.classList.add('ok');
-            statusText.textContent = 'Configured';
-        }
-
-        enableBtn.onclick = startCamera;
-        captureBtn.onclick = capture;
-        settingsBtn.onclick = () => settingsPanel.classList.add('open');
-        closeSettings.onclick = () => settingsPanel.classList.remove('open');
-        historyBtn.onclick = () => { renderHistory(); historyPanel.classList.add('open'); };
-        closeHistory.onclick = () => historyPanel.classList.remove('open');
-        saveBtn.onclick = saveKey;
-
-        video.onloadedmetadata = () => {
-            log('Video metadata loaded: ' + video.videoWidth + 'x' + video.videoHeight);
-            camReady = true;
-            liveBadge.classList.add('show');
-        };
-
-        video.onplaying = () => log('Video playing');
-        video.onerror = (e) => log('Video error: ' + e.message);
-
-        // Try auto-start
-        tryAutoStart();
-    }
-
-    async function tryAutoStart() {
-        try {
-            const perm = await navigator.permissions.query({name: 'camera'});
-            log('Permission state: ' + perm.state);
-            if (perm.state === 'granted') {
-                permission.classList.add('hide');
-                await startCamera();
-            }
-        } catch(e) {
-            log('Permissions API error: ' + e.message);
-        }
-    }
-
-    async function startCamera() {
-        log('Starting camera...');
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment', width: {ideal: 1280}, height: {ideal: 720} },
-                audio: false
+function checkCamera() {
+    log('Checking camera permission...');
+    
+    if (navigator.permissions && navigator.permissions.query) {
+        navigator.permissions.query({name: 'camera'})
+            .then(function(result) {
+                log('Permission: ' + result.state);
+                if (result.state === 'granted') {
+                    document.getElementById('permission').classList.add('hide');
+                    startCamera();
+                }
+            })
+            .catch(function(err) {
+                log('Permission check failed: ' + err.message);
             });
-            log('Got stream');
-            video.srcObject = stream;
-            await video.play();
-            log('Video playing, dimensions: ' + video.videoWidth + 'x' + video.videoHeight);
-            permission.classList.add('hide');
-            camReady = true;
-            liveBadge.classList.add('show');
-        } catch(e) {
-            log('Camera error: ' + e.name + ' - ' + e.message);
-            showToast('Camera error: ' + e.message, true);
-        }
+    } else {
+        log('Permissions API not available');
     }
+}
 
-    function captureFrame() {
-        const w = video.videoWidth || 640;
-        const h = video.videoHeight || 480;
-        canvas.width = w;
-        canvas.height = h;
+function enableCamera() {
+    log('Enable camera clicked');
+    startCamera();
+}
+
+function startCamera() {
+    log('Starting camera...');
     
+    var constraints = {
+        video: {
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+        },
+        audio: false
+    };
+    
+    navigator.mediaDevices.getUserMedia(constraints)
+        .then(function(stream) {
+            log('Got camera stream');
+            videoEl.srcObject = stream;
+            videoEl.play();
+            
+            videoEl.onloadedmetadata = function() {
+                log('Video ready: ' + videoEl.videoWidth + 'x' + videoEl.videoHeight);
+                cameraReady = true;
+                document.getElementById('permission').classList.add('hide');
+            };
+        })
+        .catch(function(err) {
+            log('Camera error: ' + err.name + ' - ' + err.message);
+            alert('Camera error: ' + err.message);
+        });
+}
+
+// CAPTURE - main function
+function handleCapture() {
+    log('>>> CAPTURE BUTTON CLICKED <<<');
+    
+    // Immediate feedback
+    document.getElementById('captureBtn').style.background = '#c9a227';
+    setTimeout(function() {
+        document.getElementById('captureBtn').style.background = '#f7f3eb';
+    }, 200);
+    
+    if (!apiKey) {
+        log('No API key!');
+        alert('Please add your OpenAI API key in Settings first');
+        openSettings();
+        return;
+    }
+    
+    if (!cameraReady) {
+        log('Camera not ready');
+        alert('Camera not ready yet');
+        return;
+    }
+    
+    // Capture frame
+    log('Capturing frame...');
+    var w = videoEl.videoWidth || 640;
+    var h = videoEl.videoHeight || 480;
+    canvasEl.width = w;
+    canvasEl.height = h;
+    var ctx = canvasEl.getContext('2d');
+    ctx.drawImage(videoEl, 0, 0, w, h);
+    var imageData = canvasEl.toDataURL('image/jpeg', 0.7);
+    log('Frame captured: ' + imageData.length + ' bytes');
+    
+    // Show loading
+    document.getElementById('loading').classList.add('show');
+    
+    // Call API
+    callAPI(imageData);
+}
+
+function callAPI(imageData) {
+    log('Calling OpenAI API...');
+    
+    var base64 = imageData.split(',')[1];
+    
+    var payload = {
+        model: 'gpt-4o',
+        max_tokens: 800,
+        messages: [{
+            role: 'user',
+            content: [
+                {
+                    type: 'text',
+                    text: 'Identify this object or building. Return ONLY JSON (no markdown): {"title":"name","era":"time period","style":"design style","history":"2 paragraphs about it","funFact":"interesting fact"}'
+                },
+                {
+                    type: 'image_url',
+                    image_url: {
+                        url: 'data:image/jpeg;base64,' + base64,
+                        detail: 'low'
+                    }
+                }
+            ]
+        }]
+    };
+    
+    log('Sending request...');
+    
+    fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + apiKey
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(function(response) {
+        log('Response status: ' + response.status);
+        return response.json();
+    })
+    .then(function(data) {
+        document.getElementById('loading').classList.remove('show');
+        
+        if (data.error) {
+            log('API Error: ' + data.error.message);
+            alert('API Error: ' + data.error.message);
+            return;
+        }
+        
+        var content = data.choices[0].message.content;
+        log('Got response: ' + content.substring(0, 50) + '...');
+        
+        // Parse JSON
+        var jsonStr = content;
+        if (content.indexOf('```') !== -1) {
+            var match = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+            if (match) jsonStr = match[1];
+        }
+        var jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+            log('Could not parse JSON');
+            alert('Could not parse response');
+            return;
+        }
+        
+        var result = JSON.parse(jsonMatch[0]);
+        log('Parsed: ' + result.title);
+        
+        showResult(result, imageData);
+    })
+    .catch(function(err) {
+        document.getElementById('loading').classList.remove('show');
+        log('Fetch error: ' + err.message);
+        alert('Error: ' + err.message);
+    });
+}
+
+function showResult(data, img) {
+    var html = '<img src="' + img + '" alt="">';
+    html += '<h1>' + (data.title || 'Unknown') + '</h1>';
+    if (data.era) html += '<p><strong>Era:</strong> ' + data.era + '</p>';
+    if (data.style) html += '<p><strong>Style:</strong> ' + data.style + '</p>';
+    if (data.history) html += '<p>' + data.history + '</p>';
+    if (data.funFact) html += '<p><strong>Fun fact:</strong> ' + data.funFact + '</p>';
+    
+    document.getElementById('resultContent').innerHTML = html;
+    document.getElementById('result').classList.add('show');
+}
+
+function closeResult() {
+    document.getElementById('result').classList.remove('show');
+}
+
+function openSettings() {
+    log('Opening settings');
+    document.getElementById('settings').classList.add('show');
+}
+
+function closeSettings() {
+    document.getElementById('settings').classList.remove('show');
+}
+
+function saveApiKey() {
+    apiKey = document.getElementById('apiKey').value.trim();
+    localStorage.setItem('openai_key', apiKey);
+    document.getElementById('keyStatus').textContent = apiKey ? '✓ API key saved!' : 'API key cleared';
+    log('API key saved');
+    
+    setTimeout(closeSettings, 500);
+}
+
+log('Script loaded');
+</script>
+
+</body>
+</html>
