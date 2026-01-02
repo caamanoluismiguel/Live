@@ -612,4 +612,877 @@
             position: absolute;
             left: 0;
             top: 0;
-            bottom
+            bottom: 0;
+            background: linear-gradient(90deg, var(--accent-sage), var(--accent-gold));
+            border-radius: 12px;
+            transition: width 0.5s ease;
+        }
+        .collectibility-bar span {
+            position: relative;
+            z-index: 1;
+            margin-left: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .collectibility-note {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* ===== AUTHENTICITY BOX ===== */
+        .authenticity-box {
+            background: rgba(139, 58, 58, 0.1);
+            border: 1px solid rgba(139, 58, 58, 0.25);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+        }
+        .authenticity-box .story-text {
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        /* ===== INFLUENCE CHAIN ===== */
+        .influence-chain {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .influence-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            border-left: 3px solid var(--accent-gold);
+        }
+        .influence-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--accent-gold);
+        }
+        .influence-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Story text variants */
+        .story-text.highlight {
+            color: var(--text-primary);
+            font-weight: 400;
+            border-left: 2px solid var(--accent-gold);
+            padding-left: 16px;
+            margin-left: 0;
+        }
+        .story-text.muted {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 8px;
+        }
+
+        /* ===== GALLERY PANEL ===== */
+        .gallery-grid {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        .gallery-item {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .gallery-item:active {
+            transform: scale(0.96);
+        }
+        .gallery-item-img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+        }
+        .gallery-item-info {
+            padding: 12px 14px;
+        }
+        .gallery-item-title {
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            line-height: 1.3;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .gallery-item-era {
+            font-size: 0.7rem;
+            color: var(--accent-gold);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .gallery-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 30px;
+            color: var(--text-muted);
+        }
+        .gallery-empty-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* ===== SETTINGS PANEL ===== */
+        .settings-body {
+            padding: 24px;
+        }
+        .setting-group {
+            margin-bottom: 32px;
+        }
+        .setting-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+        .setting-input {
+            width: 100%;
+            padding: 16px;
+            background: var(--bg-elevated);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .setting-input:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+        }
+        .setting-input::placeholder {
+            color: var(--text-muted);
+        }
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-burgundy);
+        }
+        .status-indicator.ok { background: var(--accent-sage); }
+        
+        .save-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent-gold);
+            color: var(--bg-deep);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .save-btn:active { opacity: 0.8; }
+
+        /* ===== PERMISSION SCREEN ===== */
+        .permission-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            background: var(--bg-deep);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+        }
+        .permission-screen.hide { display: none; }
+        .permission-screen svg {
+            width: 72px;
+            height: 72px;
+            stroke: var(--accent-gold);
+            fill: none;
+            stroke-width: 1.5;
+            margin-bottom: 28px;
+        }
+        .permission-screen h2 {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 400;
+            margin-bottom: 12px;
+        }
+        .permission-screen p {
+            color: var(--text-secondary);
+            margin-bottom: 36px;
+            max-width: 280px;
+            line-height: 1.6;
+        }
+        .permission-screen button {
+            padding: 16px 48px;
+            background: var(--accent-gold);
+            color: var(--bg-deep);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%) translateY(30px);
+            background: var(--text-primary);
+            color: var(--bg-deep);
+            padding: 14px 24px;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s var(--ease-out);
+            z-index: 400;
+            max-width: 85%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        .toast.error {
+            background: var(--accent-burgundy);
+            color: var(--text-primary);
+        }
+
+        /* ===== HIDDEN DEBUG ===== */
+        #debug {
+            position: fixed;
+            top: 80px;
+            left: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.9);
+            color: #0f0;
+            font-family: monospace;
+            font-size: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 500;
+            display: none;
+            border: 1px solid #0f0;
+        }
+        #debug.show { display: block; }
+
+        #canvas { display: none; }
+
+        @supports (padding-top: env(safe-area-inset-top)) {
+            .header { padding-top: calc(20px + env(safe-area-inset-top)); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Camera Layer -->
+<div class="camera-layer">
+    <video id="video" autoplay playsinline muted></video>
+    <div class="vignette"></div>
+    <div class="viewfinder" id="viewfinder">
+        <div class="vf-corner tl"></div>
+        <div class="vf-corner tr"></div>
+        <div class="vf-corner bl"></div>
+        <div class="vf-corner br"></div>
+        <div class="vf-border"></div>
+        <div class="scan-beam"></div>
+    </div>
+</div>
+
+<!-- Header -->
+<header class="header">
+    <div class="logo">Object<span>Story</span></div>
+    <div class="live-badge" id="liveBadge">
+        <div class="live-dot"></div>
+        <span>Live</span>
+    </div>
+</header>
+
+<!-- Controls -->
+<div class="controls">
+    <button class="side-btn gallery-btn" id="galleryBtn" onclick="openGallery()">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span class="gallery-count" id="galleryCount">0</span>
+    </button>
+    <button class="capture-btn" id="captureBtn" onclick="handleCapture()">
+        <span class="capture-hint">Tap to discover</span>
+    </button>
+    <button class="side-btn settings-btn" onclick="openSettings()">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+</div>
+
+<canvas id="canvas"></canvas>
+<div id="debug"></div>
+
+<!-- Permission Screen -->
+<div class="permission-screen" id="permissionScreen">
+    <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    <h2>Enable Camera</h2>
+    <p>Point your camera at any object or building to discover its hidden story</p>
+    <button onclick="enableCamera()">Enable Camera</button>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loader"></div>
+    <div class="loading-text" id="loadingText">Analyzing...</div>
+</div>
+
+<!-- Story Panel -->
+<div class="panel from-bottom" id="storyPanel">
+    <div class="panel-body" id="storyBody"></div>
+</div>
+
+<!-- Gallery Panel -->
+<div class="panel from-left" id="galleryPanel">
+    <div class="panel-header">
+        <div class="panel-title">Your Discoveries</div>
+        <button class="close-btn" onclick="closeGallery()">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+    </div>
+    <div class="panel-body">
+        <div class="gallery-grid" id="galleryGrid"></div>
+    </div>
+</div>
+
+<!-- Settings Panel -->
+<div class="panel from-right" id="settingsPanel">
+    <div class="panel-header">
+        <div class="panel-title">Settings</div>
+        <button class="close-btn" onclick="closeSettings()">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+    </div>
+    <div class="panel-body settings-body">
+        <div class="setting-group">
+            <div class="setting-label">OpenAI API Key</div>
+            <input type="text" class="setting-input" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
+            <div class="api-status">
+                <div class="status-indicator" id="statusIndicator"></div>
+                <span id="statusText">Not configured</span>
+            </div>
+        </div>
+        <button class="save-btn" onclick="saveApiKey()">Save API Key</button>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+    'use strict';
+
+    // ===== STATE =====
+    var apiKey = localStorage.getItem('os_key') || '';
+    var history = [];
+    try { history = JSON.parse(localStorage.getItem('os_history') || '[]'); } catch(e) {}
+    var busy = false;
+    var camReady = false;
+
+    // ===== ELEMENTS =====
+    var video = document.getElementById('video');
+    var canvas = document.getElementById('canvas');
+    var viewfinder = document.getElementById('viewfinder');
+    var liveBadge = document.getElementById('liveBadge');
+    var captureBtn = document.getElementById('captureBtn');
+    var galleryCount = document.getElementById('galleryCount');
+    var permissionScreen = document.getElementById('permissionScreen');
+    var loadingOverlay = document.getElementById('loadingOverlay');
+    var loadingText = document.getElementById('loadingText');
+    var storyPanel = document.getElementById('storyPanel');
+    var storyBody = document.getElementById('storyBody');
+    var galleryPanel = document.getElementById('galleryPanel');
+    var galleryGrid = document.getElementById('galleryGrid');
+    var settingsPanel = document.getElementById('settingsPanel');
+    var apiKeyInput = document.getElementById('apiKeyInput');
+    var statusIndicator = document.getElementById('statusIndicator');
+    var statusText = document.getElementById('statusText');
+    var toast = document.getElementById('toast');
+    var debug = document.getElementById('debug');
+
+    // ===== DEBUG (hidden by default, triple-tap header to show) =====
+    var tapCount = 0;
+    document.querySelector('.header').addEventListener('click', function() {
+        tapCount++;
+        setTimeout(function() { tapCount = 0; }, 500);
+        if (tapCount >= 3) {
+            debug.classList.toggle('show');
+            tapCount = 0;
+        }
+    });
+
+    function log(msg) {
+        console.log(msg);
+        var time = new Date().toLocaleTimeString();
+        debug.innerHTML = '[' + time + '] ' + msg + '<br>' + debug.innerHTML;
+    }
+
+    // ===== LOADING MESSAGES =====
+    var loadingMessages = ['Analyzing...', 'Identifying object...', 'Researching history...', 'Almost there...'];
+    var loadingIndex = 0;
+    var loadingInterval = null;
+
+    function startLoadingMessages() {
+        loadingIndex = 0;
+        loadingText.textContent = loadingMessages[0];
+        loadingInterval = setInterval(function() {
+            loadingIndex = (loadingIndex + 1) % loadingMessages.length;
+            loadingText.textContent = loadingMessages[loadingIndex];
+        }, 2000);
+    }
+    function stopLoadingMessages() {
+        if (loadingInterval) clearInterval(loadingInterval);
+    }
+
+    // ===== INIT =====
+    function init() {
+        log('Init');
+
+        if (apiKey) {
+            apiKeyInput.value = apiKey;
+            statusIndicator.classList.add('ok');
+            statusText.textContent = 'Configured';
+        }
+
+        updateGalleryCount();
+        checkCamera();
+    }
+
+    function updateGalleryCount() {
+        if (history.length > 0) {
+            galleryCount.textContent = history.length;
+            galleryCount.classList.add('show');
+        } else {
+            galleryCount.classList.remove('show');
+        }
+    }
+
+    // ===== CAMERA =====
+    function checkCamera() {
+        log('Checking camera...');
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({name: 'camera'})
+                .then(function(result) {
+                    log('Permission: ' + result.state);
+                    if (result.state === 'granted') {
+                        permissionScreen.classList.add('hide');
+                        startCamera();
+                    }
+                })
+                .catch(function(e) { log('Perm error: ' + e.message); });
+        }
+    }
+
+    window.enableCamera = function() {
+        log('Enable camera clicked');
+        startCamera();
+    };
+
+    function startCamera() {
+        log('Starting camera...');
+        navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: {ideal: 1280}, height: {ideal: 720} },
+            audio: false
+        })
+        .then(function(stream) {
+            log('Got stream');
+            video.srcObject = stream;
+            video.play();
+            video.onloadedmetadata = function() {
+                log('Video ready: ' + video.videoWidth + 'x' + video.videoHeight);
+                camReady = true;
+                liveBadge.classList.add('show');
+                permissionScreen.classList.add('hide');
+            };
+        })
+        .catch(function(e) {
+            log('Camera error: ' + e.message);
+            showToast('Camera error: ' + e.message, true);
+        });
+    }
+
+    // ===== CAPTURE =====
+    window.handleCapture = function() {
+        log('Capture clicked');
+
+        if (busy) return;
+
+        if (!apiKey) {
+            showToast('Add your API key in Settings', true);
+            openSettings();
+            return;
+        }
+
+        if (!camReady) {
+            showToast('Camera not ready', true);
+            return;
+        }
+
+        busy = true;
+        viewfinder.classList.add('scanning');
+        captureBtn.classList.add('busy');
+
+        var w = video.videoWidth || 640;
+        var h = video.videoHeight || 480;
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+        var imageData = canvas.toDataURL('image/jpeg', 0.7);
+        log('Captured: ' + imageData.length + ' bytes');
+
+        loadingOverlay.classList.add('show');
+        startLoadingMessages();
+
+        callAPI(imageData);
+    };
+
+    function callAPI(imageData) {
+        log('Calling API...');
+        var base64 = imageData.split(',')[1];
+
+        var payload = {
+            model: 'gpt-4o',
+            max_tokens: 1500,
+            response_format: { type: 'json_object' },
+            messages: [
+                { role: 'system', content: `You are an expert curator specializing in industrial design, architecture, furniture, and decorative arts. Your audience is professional designers, architects, and collectors who need detailed, authoritative analysis.
+
+Analyze images and respond with comprehensive JSON containing:
+- title: Specific name (e.g., "Eames Lounge Chair 670" not just "lounge chair")
+- designer: Object with name, nationality, birthYear, deathYear (if applicable), notableFor
+- manufacturer: Company name and location
+- yearDesigned: Year or decade
+- collection: Series or collection name if applicable
+- era: Specific period (e.g., "Mid-Century Modern, 1956")
+- style: Design movement or architectural style with substyle if relevant
+- origin: Country/city of origin
+- rarity: One of "Common", "Uncommon", "Rare", "Very Rare", "Museum Piece", "Unique"
+- collectibility: Rating 1-10 with brief explanation
+- estimatedValue: Price range in USD (e.g., "$3,000-5,000" or "Priceless")
+- history: 2-3 paragraphs about design history, context, and significance
+- designSignificance: Why this is important in design history
+- characteristics: Array of 5-6 distinctive design elements with technical terminology
+- materials: Detailed materials and construction methods
+- dimensions: Typical dimensions if identifiable
+- variants: Known variations, editions, or reproductions
+- authenticityMarkers: How to identify originals vs reproductions
+- influencedBy: What designs or movements influenced this
+- influenced: What this design influenced
+- whereToFind: Museums, notable collections, or auction houses
+- funFact: Insider knowledge that professionals would appreciate
+- relatedWorks: Similar pieces by same designer or movement
+
+If uncertain about specific details, indicate with "Likely" or "Appears to be" but still provide your best professional assessment. For architectural subjects, adapt fields appropriately (architect instead of designer, etc.).` },
+                { role: 'user', content: [
+                    { type: 'text', text: 'Provide a comprehensive professional analysis of this object, furniture piece, or building. I need designer/architect attribution, style classification, rarity assessment, collectibility, and market context.' },
+                    { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + base64, detail: 'high' } }
+                ]}
+            ]
+        };
+
+        fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+            body: JSON.stringify(payload)
+        })
+        .then(function(r) { log('Status: ' + r.status); return r.json(); })
+        .then(function(data) {
+            stopLoadingMessages();
+            loadingOverlay.classList.remove('show');
+            viewfinder.classList.remove('scanning');
+            captureBtn.classList.remove('busy');
+            busy = false;
+
+            if (data.error) {
+                log('API Error: ' + data.error.message);
+                showToast(data.error.message, true);
+                return;
+            }
+
+            var content = data.choices[0].message.content;
+            log('Response: ' + content.substring(0, 100));
+
+            var result = null;
+            try {
+                result = JSON.parse(content);
+            } catch(e) {
+                var cleaned = content.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+                try { result = JSON.parse(cleaned); } catch(e2) {
+                    var m = cleaned.match(/\{[\s\S]*\}/);
+                    if (m) try { result = JSON.parse(m[0]); } catch(e3) {}
+                }
+            }
+
+            if (!result) {
+                result = { title: 'Analysis', history: content };
+            }
+
+            // Save to history
+            history.unshift({ id: Date.now(), img: imageData, data: result });
+            if (history.length > 50) history.pop();
+            localStorage.setItem('os_history', JSON.stringify(history));
+            updateGalleryCount();
+
+            renderStory(result, imageData);
+            storyPanel.classList.add('open');
+        })
+        .catch(function(e) {
+            stopLoadingMessages();
+            loadingOverlay.classList.remove('show');
+            viewfinder.classList.remove('scanning');
+            captureBtn.classList.remove('busy');
+            busy = false;
+            log('Fetch error: ' + e.message);
+            showToast('Error: ' + e.message, true);
+        });
+    }
+
+    // ===== RENDER STORY =====
+    function renderStory(s, img) {
+        var html = '<div class="story-hero"><img src="' + img + '" alt=""><div class="story-hero-fade"></div>';
+        html += '<button class="close-btn" onclick="closeStory()"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>';
+        html += '<div class="story-content">';
+        
+        // Era badge
+        html += '<span class="story-era">' + (s.era || 'Unknown Era') + '</span>';
+        
+        // Title
+        html += '<h1 class="story-title">' + (s.title || 'Unknown Object') + '</h1>';
+
+        // Designer/Architect Card
+        if (s.designer && typeof s.designer === 'object') {
+            html += '<div class="creator-card">';
+            html += '<div class="creator-label">Designer</div>';
+            html += '<div class="creator-name">' + (s.designer.name || 'Unknown') + '</div>';
+            if (s.designer.nationality || s.designer.birthYear) {
+                html += '<div class="creator-meta">';
+                if (s.designer.nationality) html += s.designer.nationality;
+                if (s.designer.birthYear) {
+                    html += (s.designer.nationality ? ' · ' : '') + s.designer.birthYear;
+                    html += s.designer.deathYear ? '–' + s.designer.deathYear : '–present';
+                }
+                html += '</div>';
+            }
+            if (s.designer.notableFor) html += '<div class="creator-notable">' + s.designer.notableFor + '</div>';
+            html += '</div>';
+        } else if (s.designer) {
+            html += '<div class="creator-card"><div class="creator-label">Designer</div><div class="creator-name">' + s.designer + '</div></div>';
+        }
+
+        // Quick Stats Row
+        html += '<div class="stats-row">';
+        if (s.yearDesigned) html += '<div class="stat"><div class="stat-label">Year</div><div class="stat-value">' + s.yearDesigned + '</div></div>';
+        if (s.manufacturer) html += '<div class="stat"><div class="stat-label">Maker</div><div class="stat-value">' + s.manufacturer + '</div></div>';
+        if (s.collection) html += '<div class="stat"><div class="stat-label">Collection</div><div class="stat-value">' + s.collection + '</div></div>';
+        if (s.origin) html += '<div class="stat"><div class="stat-label">Origin</div><div class="stat-value">' + s.origin + '</div></div>';
+        html += '</div>';
+
+        // Rarity & Value Assessment
+        if (s.rarity || s.estimatedValue || s.collectibility) {
+            html += '<div class="assessment-card">';
+            html += '<div class="assessment-header">Market Assessment</div>';
+            html += '<div class="assessment-grid">';
+            if (s.rarity) {
+                var rarityClass = s.rarity.toLowerCase().replace(/\s+/g, '-');
+                html += '<div class="assessment-item"><div class="assessment-label">Rarity</div><div class="rarity-badge ' + rarityClass + '">' + s.rarity + '</div></div>';
+            }
+            if (s.estimatedValue) {
+                html += '<div class="assessment-item"><div class="assessment-label">Est. Value</div><div class="assessment-value price">' + s.estimatedValue + '</div></div>';
+            }
+            if (s.collectibility) {
+                var collectScore = typeof s.collectibility === 'object' ? s.collectibility.rating : s.collectibility;
+                var collectNote = typeof s.collectibility === 'object' ? s.collectibility.explanation : '';
+                html += '<div class="assessment-item full"><div class="assessment-label">Collectibility</div><div class="collectibility-bar"><div class="collectibility-fill" style="width:' + (collectScore * 10) + '%"></div><span>' + collectScore + '/10</span></div>';
+                if (collectNote) html += '<div class="collectibility-note">' + collectNote + '</div>';
+                html += '</div>';
+            }
+            html += '</div></div>';
+        }
+
+        // Style & Movement
+        if (s.style) {
+            html += '<div class="story-section"><div class="story-section-title">Style & Movement</div>';
+            html += '<p class="story-text"><strong>' + s.style + '</strong></p></div>';
+        }
+
+        // Design Significance
+        if (s.designSignificance) {
+            html += '<div class="story-section"><div class="story-section-title">Design Significance</div>';
+            html += '<p class="story-text highlight">' + s.designSignificance + '</p></div>';
+        }
+
+        // The Story
+        html += '<div class="story-section"><div class="story-section-title">History & Context</div>';
+        html += '<p class="story-text">' + (s.history || 'No information available.') + '</p></div>';
+
+        // Characteristics
+        if (s.characteristics && s.characteristics.length) {
+            html += '<div class="story-section"><div class="story-section-title">Design Characteristics</div>';
+            html += '<div class="tags">' + s.characteristics.map(function(c) { return '<span class="tag">' + c + '</span>'; }).join('') + '</div></div>';
+        }
+
+        // Materials & Construction
+        if (s.materials) {
+            html += '<div class="story-section"><div class="story-section-title">Materials & Construction</div>';
+            html += '<p class="story-text">' + s.materials + '</p>';
+            if (s.dimensions) html += '<p class="story-text muted">Dimensions: ' + s.dimensions + '</p>';
+            html += '</div>';
+        }
+
+        // Authenticity Markers
+        if (s.authenticityMarkers) {
+            html += '<div class="story-section"><div class="story-section-title">Authenticity Markers</div>';
+            html += '<div class="authenticity-box"><p class="story-text">' + s.authenticityMarkers + '</p></div></div>';
+        }
+
+        // Variants
+        if (s.variants) {
+            html += '<div class="story-section"><div class="story-section-title">Variants & Editions</div>';
+            html += '<p class="story-text">' + s.variants + '</p></div>';
+        }
+
+        // Influence Chain
+        if (s.influencedBy || s.influenced) {
+            html += '<div class="story-section"><div class="story-section-title">Design Lineage</div>';
+            html += '<div class="influence-chain">';
+            if (s.influencedBy) html += '<div class="influence-item"><span class="influence-label">Influenced by</span><span class="influence-text">' + s.influencedBy + '</span></div>';
+            if (s.influenced) html += '<div class="influence-item"><span class="influence-label">Influenced</span><span class="influence-text">' + s.influenced + '</span></div>';
+            html += '</div></div>';
+        }
+
+        // Where to Find
+        if (s.whereToFind) {
+            html += '<div class="story-section"><div class="story-section-title">Where to Find</div>';
+            html += '<p class="story-text">' + s.whereToFind + '</p></div>';
+        }
+
+        // Related Works
+        if (s.relatedWorks) {
+            html += '<div class="story-section"><div class="story-section-title">Related Works</div>';
+            html += '<p class="story-text">' + s.relatedWorks + '</p></div>';
+        }
+
+        // Fun Fact
+        if (s.funFact) {
+            html += '<div class="story-section"><div class="story-section-title">Insider Knowledge</div>';
+            html += '<div class="fun-fact-box"><p class="story-text">' + s.funFact + '</p></div></div>';
+        }
+
+        html += '</div>';
+        storyBody.innerHTML = html;
+    }
+
+    window.closeStory = function() {
+        storyPanel.classList.remove('open');
+    };
+
+    // ===== GALLERY =====
+    window.openGallery = function() {
+        renderGallery();
+        galleryPanel.classList.add('open');
+    };
+
+    window.closeGallery = function() {
+        galleryPanel.classList.remove('open');
+    };
+
+    function renderGallery() {
+        if (history.length === 0) {
+            galleryGrid.innerHTML = '<div class="gallery-empty"><div class="gallery-empty-icon">📜</div><p>No discoveries yet.<br>Point your camera at something interesting!</p></div>';
+            return;
+        }
+
+        galleryGrid.innerHTML = history.map(function(item) {
+            return '<div class="gallery-item" data-id="' + item.id + '">' +
+                '<img class="gallery-item-img" src="' + item.img + '" alt="">' +
+                '<div class="gallery-item-info">' +
+                '<div class="gallery-item-title">' + (item.data.title || 'Unknown') + '</div>' +
+                '<div class="gallery-item-era">' + (item.data.era || '') + '</div>' +
+                '</div></div>';
+        }).join('');
+
+        galleryGrid.querySelectorAll('.gallery-item').forEach(function(el) {
+            el.onclick = function() {
+                var item = history.find(function(h) { return h.id === parseInt(el.dataset.id); });
+                if (item) {
+                    renderStory(item.data, item.img);
+                    closeGallery();
+                    setTimeout(function() { storyPanel.classList.add('open'); }, 250);
+                }
+            };
+        });
+    }
+
+    // ===== SETTINGS =====
+    window.openSettings = function() {
+        settingsPanel.classList.add('open');
+    };
+
+    window.closeSettings = function() {
+        settingsPanel.classList.remove('open');
+    };
+
+    window.saveApiKey = function() {
+        apiKey = apiKeyInput.value.trim();
+        localStorage.setItem('os_key', apiKey);
+        if (apiKey) {
+            statusIndicator.classList.add('ok');
+            statusText.textContent = 'Configured';
+            showToast('API key saved!');
+        } else {
+            statusIndicator.classList.remove('ok');
+            statusText.textContent = 'Not configured';
+            showToast('API key removed');
+        }
+        setTimeout(closeSettings, 400);
+    };
+
+    // ===== TOAST =====
+    function showToast(msg, isError) {
+        toast.textContent = msg;
+        toast.className = 'toast show' + (isError ? ' error' : '');
+        setTimeout(function() { toast.classList.remove('show'); }, 3500);
+    }
+
+    // ===== START =====
+    init();
+    log('Ready');
+})();
+</script>
+
+</body>
+</html>
