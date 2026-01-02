@@ -308,22 +308,29 @@ function callAPI(imageData) {
     var payload = {
         model: 'gpt-4o',
         max_tokens: 800,
-        messages: [{
-            role: 'user',
-            content: [
-                {
-                    type: 'text',
-                    text: 'Identify this object or building. Return ONLY JSON (no markdown): {"title":"name","era":"time period","style":"design style","history":"2 paragraphs about it","funFact":"interesting fact"}'
-                },
-                {
-                    type: 'image_url',
-                    image_url: {
-                        url: 'data:image/jpeg;base64,' + base64,
-                        detail: 'low'
+        response_format: { type: 'json_object' },
+        messages: [
+            {
+                role: 'system',
+                content: 'You analyze images and respond with JSON containing: title, era, style, history, funFact.'
+            },
+            {
+                role: 'user',
+                content: [
+                    {
+                        type: 'text',
+                        text: 'Analyze this image. What object or building is this? Provide title, era, style, history, and a fun fact.'
+                    },
+                    {
+                        type: 'image_url',
+                        image_url: {
+                            url: 'data:image/jpeg;base64,' + base64,
+                            detail: 'low'
+                        }
                     }
-                }
-            ]
-        }]
+                ]
+            }
+        ]
     };
     
     log('Sending request...');
@@ -350,24 +357,52 @@ function callAPI(imageData) {
         }
         
         var content = data.choices[0].message.content;
-        log('Got response: ' + content.substring(0, 50) + '...');
+        log('Raw response: ' + content);
         
-        // Parse JSON
-        var jsonStr = content;
-        if (content.indexOf('```') !== -1) {
-            var match = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-            if (match) jsonStr = match[1];
+        // Try to parse JSON - multiple methods
+        var result = null;
+        
+        try {
+            // Method 1: Direct parse
+            result = JSON.parse(content);
+            log('Parsed directly');
+        } catch(e1) {
+            log('Direct parse failed, trying to extract...');
+            
+            // Method 2: Remove markdown code blocks
+            var cleaned = content;
+            cleaned = cleaned.replace(/```json\s*/gi, '');
+            cleaned = cleaned.replace(/```\s*/g, '');
+            cleaned = cleaned.trim();
+            
+            try {
+                result = JSON.parse(cleaned);
+                log('Parsed after cleaning markdown');
+            } catch(e2) {
+                // Method 3: Find JSON object in text
+                var jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    try {
+                        result = JSON.parse(jsonMatch[0]);
+                        log('Parsed from extracted JSON');
+                    } catch(e3) {
+                        log('All parse methods failed');
+                    }
+                }
+            }
         }
-        var jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-            log('Could not parse JSON');
-            alert('Could not parse response');
+        
+        if (!result) {
+            // Show raw response so user can see what happened
+            log('Parse failed - showing raw');
+            showResult({
+                title: 'Analysis Result',
+                history: content
+            }, imageData);
             return;
         }
         
-        var result = JSON.parse(jsonMatch[0]);
-        log('Parsed: ' + result.title);
-        
+        log('Success: ' + result.title);
         showResult(result, imageData);
     })
     .catch(function(err) {
