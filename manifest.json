@@ -1,11 +1,12 @@
 {
   "name": "ObjectStory",
   "short_name": "ObjectStory",
-  "description": "Discover the hidden stories behind objects and buildings",
-  "start_url": "/",
+  "description": "Your personal design companion. Identify and learn the story behind any object, furniture, or architecture.",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#1a1612",
-  "theme_color": "#1a1612",
+  "background_color": "#0d0b09",
+  "theme_color": "#0d0b09",
   "orientation": "portrait",
   "icons": [
     {
@@ -20,5 +21,6 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["education", "lifestyle", "utilities"]
 }
