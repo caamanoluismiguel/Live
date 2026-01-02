@@ -3,726 +3,415 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ObjectStory — Live Discovery</title>
-    <link rel="manifest" href="manifest.json">
+    <title>ObjectStory</title>
     <meta name="theme-color" content="#1a1612">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --color-parchment: #f7f3eb;
-            --color-ink: #1a1612;
-            --color-sepia: #8b7355;
-            --color-gold: #c9a227;
-            --color-rust: #a65d3f;
-            --color-sage: #6b7c5e;
+            --parchment: #f7f3eb;
+            --ink: #1a1612;
+            --sepia: #8b7355;
+            --gold: #c9a227;
+            --rust: #a65d3f;
+            --sage: #6b7c5e;
             --font-display: 'Cormorant Garamond', Georgia, serif;
             --font-body: 'DM Sans', system-ui, sans-serif;
-            --ease-elegant: cubic-bezier(0.23, 1, 0.32, 1);
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        html, body {
-            height: 100%;
-            overflow: hidden;
-        }
-
-        body {
-            font-family: var(--font-body);
-            background: var(--color-ink);
-            color: var(--color-parchment);
-            line-height: 1.6;
-        }
-
-        .app {
-            height: 100%;
-            position: relative;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        body { font-family: var(--font-body); background: var(--ink); color: var(--parchment); }
 
         /* Camera */
-        .camera-container {
-            position: fixed;
-            inset: 0;
-            background: #0a0908;
-        }
-
-        #video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .camera-overlay {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            background: radial-gradient(ellipse at center, transparent 40%, rgba(26,22,18,0.4) 100%);
-        }
-
-        /* Live indicator */
-        .live-indicator {
-            position: absolute;
-            top: 70px;
-            left: 20px;
-            display: none;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.15em;
-            color: var(--color-parchment);
-            z-index: 15;
-        }
-
-        .live-indicator.visible {
-            display: flex;
-        }
-
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            background: #e53935;
-            border-radius: 50%;
-            animation: livePulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes livePulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
+        .camera-container { position: fixed; inset: 0; background: #000; }
+        #video { width: 100%; height: 100%; object-fit: cover; }
+        .overlay { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 40%, rgba(26,22,18,0.4) 100%); }
 
         /* Viewfinder */
         .viewfinder {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 75%;
-            max-width: 320px;
-            aspect-ratio: 1;
-            border: 1px solid rgba(201, 162, 39, 0.25);
-            border-radius: 12px;
-            transition: all 0.5s var(--ease-elegant);
-            pointer-events: none;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 75%; max-width: 300px; aspect-ratio: 1;
+            border: 1px solid rgba(201,162,39,0.3); border-radius: 12px;
+            pointer-events: none; transition: all 0.4s;
         }
-
-        .viewfinder::before,
-        .viewfinder::after {
-            content: '';
-            position: absolute;
-            width: 28px;
-            height: 28px;
-            border-color: var(--color-gold);
-            border-style: solid;
+        .viewfinder::before, .viewfinder::after {
+            content: ''; position: absolute; width: 30px; height: 30px;
+            border-color: var(--gold); border-style: solid;
         }
-
-        .viewfinder::before {
-            top: -1px;
-            left: -1px;
-            border-width: 3px 0 0 3px;
-            border-radius: 12px 0 0 0;
-        }
-
-        .viewfinder::after {
-            bottom: -1px;
-            right: -1px;
-            border-width: 0 3px 3px 0;
-            border-radius: 0 0 12px 0;
-        }
-
-        .viewfinder.scanning {
-            border-color: var(--color-gold);
-            box-shadow: 0 0 60px rgba(201, 162, 39, 0.3);
-        }
-
+        .viewfinder::before { top: -1px; left: -1px; border-width: 3px 0 0 3px; border-radius: 12px 0 0 0; }
+        .viewfinder::after { bottom: -1px; right: -1px; border-width: 0 3px 3px 0; border-radius: 0 0 12px 0; }
+        .viewfinder.scanning { border-color: var(--gold); box-shadow: 0 0 50px rgba(201,162,39,0.4); }
         .scan-line {
-            position: absolute;
-            top: 0;
-            left: 8%;
-            right: 8%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
-            opacity: 0;
-            box-shadow: 0 0 20px var(--color-gold);
+            position: absolute; left: 10%; right: 10%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            opacity: 0; box-shadow: 0 0 15px var(--gold);
         }
-
-        .viewfinder.scanning .scan-line {
-            opacity: 1;
-            animation: scanMove 1.8s ease-in-out infinite;
-        }
-
-        @keyframes scanMove {
-            0%, 100% { top: 8%; }
-            50% { top: 88%; }
-        }
+        .viewfinder.scanning .scan-line { opacity: 1; animation: scan 1.5s ease-in-out infinite; }
+        @keyframes scan { 0%,100% { top: 10%; } 50% { top: 85%; } }
 
         /* Header */
         .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 16px 20px;
+            position: fixed; top: 0; left: 0; right: 0; padding: 16px 20px; z-index: 10;
             background: linear-gradient(to bottom, rgba(26,22,18,0.95), transparent);
-            z-index: 10;
         }
+        .logo { font-family: var(--font-display); font-size: 1.5rem; }
+        .logo span { color: var(--gold); font-style: italic; }
 
-        .logo {
-            font-family: var(--font-display);
-            font-size: 1.6rem;
-            font-weight: 400;
+        /* Live badge */
+        .live-badge {
+            position: fixed; top: 70px; left: 20px; z-index: 10;
+            display: none; align-items: center; gap: 6px;
+            font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em;
         }
+        .live-badge.show { display: flex; }
+        .live-dot { width: 8px; height: 8px; background: #e53935; border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-        .logo span {
-            color: var(--color-gold);
-            font-style: italic;
+        /* Debug info */
+        .debug {
+            position: fixed; top: 100px; left: 10px; right: 10px; z-index: 15;
+            font-size: 0.7rem; color: var(--gold); background: rgba(0,0,0,0.7);
+            padding: 8px; border-radius: 6px; display: none; max-height: 150px; overflow: auto;
         }
+        .debug.show { display: block; }
 
         /* Controls */
-        .capture-area {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 24px 20px 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .controls {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+            padding: 20px 20px 40px; display: flex; justify-content: center; align-items: center;
             background: linear-gradient(to top, rgba(26,22,18,0.98), transparent);
-            z-index: 10;
         }
-
         .capture-btn {
-            width: 76px;
-            height: 76px;
-            border-radius: 50%;
-            background: var(--color-parchment);
-            border: 4px solid var(--color-gold);
-            cursor: pointer;
-            position: relative;
-            transition: all 0.3s var(--ease-elegant);
-            box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+            width: 72px; height: 72px; border-radius: 50%;
+            background: var(--parchment); border: 4px solid var(--gold);
+            cursor: pointer; position: relative;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.5); transition: all 0.2s;
         }
-
-        .capture-btn:active {
-            transform: scale(0.92);
+        .capture-btn:active { transform: scale(0.9); }
+        .capture-btn.busy { animation: glow 1s infinite; pointer-events: none; }
+        @keyframes glow { 0%,100% { box-shadow: 0 4px 25px rgba(0,0,0,0.5); } 50% { box-shadow: 0 4px 40px rgba(201,162,39,0.7); } }
+        .hint {
+            position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+            margin-bottom: 12px; font-size: 0.7rem; text-transform: uppercase;
+            letter-spacing: 0.12em; color: rgba(247,243,235,0.6); white-space: nowrap;
         }
-
-        .capture-btn.analyzing {
-            animation: pulse 1.2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 4px 30px rgba(0,0,0,0.5); }
-            50% { box-shadow: 0 4px 50px rgba(201, 162, 39, 0.8); }
-        }
-
-        .capture-hint {
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            margin-bottom: 14px;
-            font-size: 0.75rem;
-            color: rgba(247, 243, 235, 0.7);
-            text-transform: uppercase;
-            letter-spacing: 0.15em;
-            white-space: nowrap;
-        }
-
         .side-btn {
-            position: absolute;
-            bottom: 44px;
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            background: rgba(247, 243, 235, 0.1);
-            border: 1px solid rgba(247, 243, 235, 0.2);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: absolute; bottom: 44px; width: 48px; height: 48px;
+            border-radius: 10px; background: rgba(247,243,235,0.1);
+            border: 1px solid rgba(247,243,235,0.2); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
         }
+        .side-btn svg { width: 22px; height: 22px; stroke: var(--parchment); fill: none; }
+        .gallery-btn { left: 20px; }
+        .settings-btn { right: 20px; }
 
-        .side-btn svg {
-            width: 24px;
-            height: 24px;
-            stroke: var(--color-parchment);
-            fill: none;
+        /* Loading overlay */
+        .loading {
+            position: fixed; inset: 0; z-index: 50;
+            background: rgba(26,22,18,0.9); display: none;
+            flex-direction: column; align-items: center; justify-content: center;
         }
-
-        .gallery-btn { left: 24px; }
-        .settings-btn { right: 24px; }
-
-        /* Analysis overlay */
-        .analysis-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(26, 22, 18, 0.85);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
-        }
-
-        .analysis-overlay.active {
-            display: flex;
-        }
-
+        .loading.show { display: flex; }
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(201, 162, 39, 0.2);
-            border-top-color: var(--color-gold);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 20px;
+            width: 48px; height: 48px; border: 3px solid rgba(201,162,39,0.2);
+            border-top-color: var(--gold); border-radius: 50%;
+            animation: spin 0.7s linear infinite; margin-bottom: 16px;
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-family: var(--font-display); font-style: italic; color: var(--sepia); }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        /* Panels */
+        .panel {
+            position: fixed; inset: 0; z-index: 100; background: var(--ink);
+            transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.23,1,0.32,1);
+            display: flex; flex-direction: column; overflow: hidden;
         }
-
-        .analysis-text {
-            font-family: var(--font-display);
-            font-size: 1.1rem;
-            font-style: italic;
-            color: var(--color-sepia);
-        }
-
-        /* Story Panel */
-        .story-panel {
-            position: fixed;
-            inset: 0;
-            background: var(--color-ink);
-            z-index: 100;
-            transform: translateY(100%);
-            transition: transform 0.6s var(--ease-elegant);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .story-panel.active {
-            transform: translateY(0);
-        }
-
-        .story-image-container {
-            position: relative;
-            height: 35vh;
-            min-height: 220px;
-            flex-shrink: 0;
-        }
-
-        .story-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .story-image-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to bottom, transparent 40%, var(--color-ink) 100%);
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: rgba(26, 22, 18, 0.8);
-            border: 1px solid rgba(247, 243, 235, 0.15);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-        }
-
-        .close-btn svg {
-            width: 20px;
-            height: 20px;
-            stroke: var(--color-parchment);
-            fill: none;
-        }
-
-        .story-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0 24px 40px;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .story-era {
-            display: inline-block;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.2em;
-            color: var(--color-gold);
-            background: rgba(201, 162, 39, 0.1);
-            padding: 6px 12px;
-            border-radius: 4px;
-            margin-bottom: 16px;
-        }
-
-        .story-title {
-            font-family: var(--font-display);
-            font-size: 2rem;
-            font-weight: 400;
-            line-height: 1.2;
-            margin-bottom: 8px;
-        }
-
-        .story-subtitle {
-            font-family: var(--font-display);
-            font-size: 1.1rem;
-            font-style: italic;
-            color: var(--color-sepia);
-            margin-bottom: 24px;
-        }
-
-        .story-section {
-            margin-bottom: 28px;
-        }
-
-        .story-section-title {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.15em;
-            color: var(--color-gold);
-            margin-bottom: 12px;
-        }
-
-        .story-text {
-            font-size: 0.95rem;
-            color: rgba(247, 243, 235, 0.85);
-            line-height: 1.75;
-        }
-
-        .characteristics {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .tag {
-            font-size: 0.8rem;
-            padding: 8px 14px;
-            background: rgba(107, 124, 94, 0.15);
-            border: 1px solid rgba(107, 124, 94, 0.3);
-            border-radius: 20px;
-            color: var(--color-sage);
-        }
-
-        .fun-fact {
-            background: rgba(166, 93, 63, 0.1);
-            border-left: 3px solid var(--color-rust);
-            padding: 16px 20px;
-            border-radius: 0 8px 8px 0;
-        }
-
-        /* Settings Panel */
-        .settings-panel {
-            position: fixed;
-            inset: 0;
-            background: rgba(26, 22, 18, 0.98);
-            z-index: 100;
-            transform: translateX(100%);
-            transition: transform 0.5s var(--ease-elegant);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .settings-panel.active {
-            transform: translateX(0);
-        }
+        .panel.from-right { transform: translateX(100%); }
+        .panel.from-left { transform: translateX(-100%); }
+        .panel.open { transform: translate(0); }
 
         .panel-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid rgba(247, 243, 235, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            padding: 18px 20px; border-bottom: 1px solid rgba(247,243,235,0.1);
+            display: flex; align-items: center; justify-content: space-between;
         }
-
-        .panel-title {
-            font-family: var(--font-display);
-            font-size: 1.5rem;
+        .panel-title { font-family: var(--font-display); font-size: 1.4rem; }
+        .close-btn {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(247,243,235,0.1); border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
         }
+        .close-btn svg { width: 18px; height: 18px; stroke: var(--parchment); fill: none; }
+        .panel-body { flex: 1; overflow-y: auto; padding: 20px; -webkit-overflow-scrolling: touch; }
 
-        .panel-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 24px;
+        /* Story panel */
+        .story-img-wrap { position: relative; height: 35vh; min-height: 200px; margin: -20px -20px 0; }
+        .story-img { width: 100%; height: 100%; object-fit: cover; }
+        .story-img-fade { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 50%, var(--ink) 100%); }
+        .story-close { position: absolute; top: 12px; right: 12px; background: rgba(26,22,18,0.7); }
+
+        .story-era {
+            display: inline-block; font-size: 0.65rem; text-transform: uppercase;
+            letter-spacing: 0.15em; color: var(--gold); background: rgba(201,162,39,0.1);
+            padding: 5px 10px; border-radius: 4px; margin-bottom: 14px;
         }
+        .story-title { font-family: var(--font-display); font-size: 1.8rem; line-height: 1.2; margin-bottom: 6px; }
+        .story-subtitle { font-family: var(--font-display); font-style: italic; color: var(--sepia); margin-bottom: 20px; }
+        .story-section { margin-bottom: 24px; }
+        .story-section-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold); margin-bottom: 10px; }
+        .story-text { font-size: 0.9rem; color: rgba(247,243,235,0.85); line-height: 1.7; }
+        .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .tag { font-size: 0.75rem; padding: 6px 12px; background: rgba(107,124,94,0.15); border: 1px solid rgba(107,124,94,0.3); border-radius: 16px; color: var(--sage); }
+        .fun-fact { background: rgba(166,93,63,0.1); border-left: 3px solid var(--rust); padding: 14px 16px; border-radius: 0 6px 6px 0; }
 
-        .setting-group {
-            margin-bottom: 32px;
-        }
-
-        .setting-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.15em;
-            color: var(--color-sepia);
-            margin-bottom: 12px;
-        }
-
+        /* Settings */
+        .setting-group { margin-bottom: 28px; }
+        .setting-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--sepia); margin-bottom: 10px; }
         .setting-input {
-            width: 100%;
-            padding: 14px 16px;
-            background: rgba(247, 243, 235, 0.05);
-            border: 1px solid rgba(247, 243, 235, 0.15);
-            border-radius: 8px;
-            color: var(--color-parchment);
-            font-family: var(--font-body);
-            font-size: 1rem;
+            width: 100%; padding: 12px 14px; background: rgba(247,243,235,0.05);
+            border: 1px solid rgba(247,243,235,0.15); border-radius: 6px;
+            color: var(--parchment); font-family: var(--font-body); font-size: 0.95rem;
         }
-
-        .setting-input:focus {
-            outline: none;
-            border-color: var(--color-gold);
-        }
-
-        .api-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 10px;
-            font-size: 0.8rem;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--color-rust);
-        }
-
-        .status-dot.connected {
-            background: var(--color-sage);
-        }
-
+        .setting-input:focus { outline: none; border-color: var(--gold); }
+        .api-status { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 0.75rem; }
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--rust); }
+        .status-dot.ok { background: var(--sage); }
         .save-btn {
-            width: 100%;
-            padding: 16px;
-            background: var(--color-gold);
-            color: var(--color-ink);
-            border: none;
-            border-radius: 8px;
-            font-family: var(--font-body);
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
+            width: 100%; padding: 14px; background: var(--gold); color: var(--ink);
+            border: none; border-radius: 6px; font-family: var(--font-body);
+            font-size: 0.95rem; font-weight: 500; cursor: pointer;
         }
 
-        /* History Panel */
-        .history-panel {
-            position: fixed;
-            inset: 0;
-            background: var(--color-ink);
-            z-index: 100;
-            transform: translateX(-100%);
-            transition: transform 0.5s var(--ease-elegant);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .history-panel.active {
-            transform: translateX(0);
-        }
-
-        .history-empty {
-            text-align: center;
-            padding: 60px 24px;
-            color: var(--color-sepia);
-        }
-
+        /* History */
+        .history-empty { text-align: center; padding: 50px 20px; color: var(--sepia); }
         .history-item {
-            display: flex;
-            gap: 16px;
-            padding: 16px;
-            background: rgba(247, 243, 235, 0.03);
-            border-radius: 12px;
-            margin-bottom: 12px;
-            cursor: pointer;
+            display: flex; gap: 14px; padding: 14px; background: rgba(247,243,235,0.03);
+            border-radius: 10px; margin-bottom: 10px; cursor: pointer;
         }
+        .history-thumb { width: 64px; height: 64px; border-radius: 6px; object-fit: cover; flex-shrink: 0; }
+        .history-info { flex: 1; min-width: 0; }
+        .history-title { font-family: var(--font-display); font-size: 1rem; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-era { font-size: 0.7rem; color: var(--gold); }
 
-        .history-item-image {
-            width: 72px;
-            height: 72px;
-            border-radius: 8px;
-            object-fit: cover;
-            flex-shrink: 0;
+        /* Permission */
+        .permission {
+            position: fixed; inset: 0; z-index: 200; background: var(--ink);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 40px; text-align: center;
         }
-
-        .history-item-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .history-item-title {
-            font-family: var(--font-display);
-            font-size: 1.1rem;
-            margin-bottom: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .history-item-era {
-            font-size: 0.75rem;
-            color: var(--color-gold);
-        }
-
-        /* Permission Prompt */
-        .permission-prompt {
-            position: fixed;
-            inset: 0;
-            background: var(--color-ink);
-            z-index: 200;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-            text-align: center;
-        }
-
-        .permission-prompt.hidden {
-            display: none;
-        }
-
-        .permission-icon {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 24px;
-            stroke: var(--color-gold);
-            fill: none;
-        }
-
-        .permission-title {
-            font-family: var(--font-display);
-            font-size: 1.75rem;
-            margin-bottom: 12px;
-        }
-
-        .permission-text {
-            color: var(--color-sepia);
-            margin-bottom: 32px;
-            max-width: 300px;
-        }
-
-        .permission-btn {
-            padding: 16px 40px;
-            background: var(--color-gold);
-            color: var(--color-ink);
-            border: none;
-            border-radius: 8px;
-            font-family: var(--font-body);
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
+        .permission.hide { display: none; }
+        .permission svg { width: 70px; height: 70px; stroke: var(--gold); fill: none; margin-bottom: 20px; }
+        .permission h2 { font-family: var(--font-display); font-size: 1.6rem; margin-bottom: 10px; }
+        .permission p { color: var(--sepia); margin-bottom: 28px; max-width: 280px; }
+        .permission button {
+            padding: 14px 36px; background: var(--gold); color: var(--ink);
+            border: none; border-radius: 6px; font-family: var(--font-body);
+            font-size: 0.95rem; font-weight: 500; cursor: pointer;
         }
 
         /* Toast */
         .toast {
-            position: fixed;
-            bottom: 140px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: var(--color-parchment);
-            color: var(--color-ink);
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            opacity: 0;
-            transition: all 0.4s var(--ease-elegant);
-            z-index: 200;
-            max-width: 90%;
-            text-align: center;
+            position: fixed; bottom: 130px; left: 50%; transform: translateX(-50%) translateY(80px);
+            background: var(--parchment); color: var(--ink); padding: 10px 20px;
+            border-radius: 6px; font-size: 0.85rem; opacity: 0; transition: all 0.3s;
+            z-index: 300; max-width: 85%; text-align: center;
         }
-
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-
-        .toast.error {
-            background: var(--color-rust);
-            color: var(--color-parchment);
-        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast.err { background: var(--rust); color: var(--parchment); }
 
         #canvas { display: none; }
 
         @supports (padding-top: env(safe-area-inset-top)) {
             .header { padding-top: calc(16px + env(safe-area-inset-top)); }
-            .live-indicator { top: calc(70px + env(safe-area-inset-top)); }
-            .capture-area { padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
+            .live-badge { top: calc(70px + env(safe-area-inset-top)); }
+            .controls { padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
         }
     </style>
 </head>
 <body>
-    <div class="app">
-        <!-- Camera -->
-        <div class="camera-container">
-            <video id="video" autoplay playsinline muted></video>
-            <div class="camera-overlay"></div>
-            <div class="viewfinder" id="viewfinder">
-                <div class="scan-line"></div>
-            </div>
-        </div>
 
-        <!-- Header -->
-        <header class="header">
-            <div class="logo">Object<span>Story</span></div>
-        </header>
+<div class="camera-container">
+    <video id="video" autoplay playsinline muted></video>
+    <div class="overlay"></div>
+    <div class="viewfinder" id="viewfinder"><div class="scan-line"></div></div>
+</div>
 
-        <!-- Live Indicator -->
-        <div class="live-indicator" id="liveIndicator">
-            <div class="live-dot"></div>
-            <span>Live</span>
-        </div>
+<header class="header"><div class="logo">Object<span>Story</span></div></header>
 
-        <!-- Controls -->
-        <div class="capture-area">
-            <button class="side-btn gallery-btn" id="galleryBtn">
-                <svg viewBox="0 0 24 24" stroke-width="1.5">
-                    <rect x="3" y="3" width="7" height="7" rx="1"/>
-                    <rect x="14" y="3" width="7" height="7" rx="1"/>
-                    <rect x="3" y="14" width="7" height="7" rx="1"/>
-                    <rect x="14" y="14" width="7" height="7" rx="1"/>
-                </svg>
-            </button>
-            
-            <button class="capture-btn" id="captureBtn">
-                <span class="capture-hint">Tap to discover</span>
-            </button>
-            
-            <button class="side-btn settings-btn" id="settingsBtn">
-                <svg viewBox="0 0 24 24" stroke-width="1.5">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M12 1v4m0 14v4M4.22 4.22l2.83 2.83m9.9 9.9l2.83 2.83M1 12h4m14 0h4M4.22 19.78l2.83-2.83m9.9-9.9l2.83-2.83"/>
-                </svg>
-            </button>
-        </div>
+<div class="live-badge" id="liveBadge"><div class="live-dot"></div><span>Live</span></div>
 
-        <canvas id="canvas"></canvas>
+<div class="debug" id="debug"></div>
+
+<div class="controls">
+    <button class="side-btn gallery-btn" id="historyBtn">
+        <svg viewBox="0 0 24 24" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </button>
+    <button class="capture-btn" id="captureBtn"><span class="hint">Tap to discover</span></button>
+    <button class="side-btn settings-btn" id="settingsBtn">
+        <svg viewBox="0 0 24 24" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M4.22 4.22l2.83 2.83m9.9 9.9l2.83 2.83M1 12h4m14 0h4M4.22 19.78l2.83-2.83m9.9-9.9l2.83-2.83"/></svg>
+    </button>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<!-- Permission -->
+<div class="permission" id="permission">
+    <svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2v11z"/><circle cx="12" cy="13" r="4"/></svg>
+    <h2>Enable Camera</h2>
+    <p>Point at any object or building to discover its story</p>
+    <button id="enableBtn">Enable Camera</button>
+</div>
+
+<!-- Loading -->
+<div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Analyzing...</div>
+</div>
+
+<!-- Story Panel -->
+<div class="panel" id="storyPanel">
+    <div class="panel-body" id="storyBody"></div>
+</div>
+
+<!-- Settings Panel -->
+<div class="panel from-right" id="settingsPanel">
+    <div class="panel-header">
+        <div class="panel-title">Settings</div>
+        <button class="close-btn" id="closeSettings"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
+    <div class="panel-body">
+        <div class="setting-group">
+            <div class="setting-label">OpenAI API Key</div>
+            <input type="text" class="setting-input" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
+            <div class="api-status"><div class="status-dot" id="statusDot"></div><span id="statusText">Not configured</span></div>
+        </div>
+        <button class="save-btn" id="saveBtn">Save Settings</button>
+    </div>
+</div>
 
-    <!-- Permission Prompt -->
-    <div class="permission-prompt" id="permissionPrompt">
-        <svg class="permission-icon" viewBox="0 0 24 24" stroke-wi
+<!-- History Panel -->
+<div class="panel from-left" id="historyPanel">
+    <div class="panel-header">
+        <div class="panel-title">Discoveries</div>
+        <button class="close-btn" id="closeHistory"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="panel-body" id="historyBody"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+    'use strict';
+    
+    // === State ===
+    let apiKey = localStorage.getItem('os_key') || '';
+    let history = [];
+    try { history = JSON.parse(localStorage.getItem('os_history') || '[]'); } catch(e) {}
+    let busy = false;
+    let camReady = false;
+
+    // === Elements ===
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const viewfinder = document.getElementById('viewfinder');
+    const liveBadge = document.getElementById('liveBadge');
+    const debug = document.getElementById('debug');
+    const captureBtn = document.getElementById('captureBtn');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const historyBtn = document.getElementById('historyBtn');
+    const permission = document.getElementById('permission');
+    const enableBtn = document.getElementById('enableBtn');
+    const loading = document.getElementById('loading');
+    const loadingText = document.getElementById('loadingText');
+    const storyPanel = document.getElementById('storyPanel');
+    const storyBody = document.getElementById('storyBody');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const closeSettings = document.getElementById('closeSettings');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const saveBtn = document.getElementById('saveBtn');
+    const historyPanel = document.getElementById('historyPanel');
+    const historyBody = document.getElementById('historyBody');
+    const closeHistory = document.getElementById('closeHistory');
+    const toast = document.getElementById('toast');
+
+    // === Debug logging ===
+    function log(msg) {
+        console.log(msg);
+        debug.textContent = msg + '\n' + debug.textContent;
+        debug.classList.add('show');
+    }
+
+    // === Init ===
+    function init() {
+        log('Init started');
+        
+        if (apiKey) {
+            apiKeyInput.value = apiKey;
+            statusDot.classList.add('ok');
+            statusText.textContent = 'Configured';
+        }
+
+        enableBtn.onclick = startCamera;
+        captureBtn.onclick = capture;
+        settingsBtn.onclick = () => settingsPanel.classList.add('open');
+        closeSettings.onclick = () => settingsPanel.classList.remove('open');
+        historyBtn.onclick = () => { renderHistory(); historyPanel.classList.add('open'); };
+        closeHistory.onclick = () => historyPanel.classList.remove('open');
+        saveBtn.onclick = saveKey;
+
+        video.onloadedmetadata = () => {
+            log('Video metadata loaded: ' + video.videoWidth + 'x' + video.videoHeight);
+            camReady = true;
+            liveBadge.classList.add('show');
+        };
+
+        video.onplaying = () => log('Video playing');
+        video.onerror = (e) => log('Video error: ' + e.message);
+
+        // Try auto-start
+        tryAutoStart();
+    }
+
+    async function tryAutoStart() {
+        try {
+            const perm = await navigator.permissions.query({name: 'camera'});
+            log('Permission state: ' + perm.state);
+            if (perm.state === 'granted') {
+                permission.classList.add('hide');
+                await startCamera();
+            }
+        } catch(e) {
+            log('Permissions API error: ' + e.message);
+        }
+    }
+
+    async function startCamera() {
+        log('Starting camera...');
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment', width: {ideal: 1280}, height: {ideal: 720} },
+                audio: false
+            });
+            log('Got stream');
+            video.srcObject = stream;
+            await video.play();
+            log('Video playing, dimensions: ' + video.videoWidth + 'x' + video.videoHeight);
+            permission.classList.add('hide');
+            camReady = true;
+            liveBadge.classList.add('show');
+        } catch(e) {
+            log('Camera error: ' + e.name + ' - ' + e.message);
+            showToast('Camera error: ' + e.message, true);
+        }
+    }
+
+    function captureFrame() {
+        const w = video.videoWidth || 640;
+        const h = video.videoHeight || 480;
+        canvas.width = w;
+        canvas.height = h;
+    
